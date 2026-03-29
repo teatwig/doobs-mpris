@@ -20,113 +20,370 @@
 //!
 //! …consequently `zbus-xmlgen` did not generate code for the above interfaces.
 
-use zbus::proxy;
+use std::future::Future;
 
+use zbus::interface;
+use zbus::object_server::SignalEmitter;
+
+use crate::LoopStatus;
 use crate::types::{MprisDuration, TrackId};
 
-#[proxy(
-    interface = "org.mpris.MediaPlayer2.Player",
-    default_path = "/org/mpris/MediaPlayer2"
-)]
-pub trait Player {
+/// Implement this trait to provide the main functionality of a player.
+///
+/// Most functions have a default implementation to make it easier to create a simple player that
+/// only exposes the current playback status.
+/// When implementing additional functions make sure read the MPRIS specification.
+#[allow(unused_variables)]
+pub trait PlayerProvider {
     /// Next method
-    fn next(&self) -> zbus::Result<()>;
+    ///
+    /// If CanGoNext is false, attempting to call this method should have no effect.
+    fn next(&self) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
 
     /// OpenUri method
-    fn open_uri(&self, uri: &str) -> zbus::Result<()>;
+    ///
+    /// If the uri scheme or the mime-type of the uri to open is not supported,
+    /// this method does nothing and may raise an error.
+    fn open_uri(&self, uri: &str) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async {
+            Err(zbus::fdo::Error::UnknownProperty(
+                "not implemented: OpenUri".to_string(),
+            ))
+        }
+    }
 
     /// Pause method
-    fn pause(&self) -> zbus::Result<()>;
+    ///
+    /// If CanPause is false, attempting to call this method should have no effect.
+    fn pause(&self) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
 
     /// Play method
-    fn play(&self) -> zbus::Result<()>;
+    ///
+    /// If CanPlay is false, attempting to call this method should have no effect.
+    fn play(&self) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
 
     /// PlayPause method
-    fn play_pause(&self) -> zbus::Result<()>;
+    ///
+    /// If CanPause is false, attempting to call this method should have no effect and raise an error.
+    fn play_pause(&self) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
 
     /// Previous method
-    fn previous(&self) -> zbus::Result<()>;
+    ///
+    /// If CanGoPrevious is false, attempting to call this method should have no effect.
+    fn previous(&self) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
 
     /// Seek method
-    fn seek(&self, offset: MprisDuration) -> zbus::Result<()>;
+    ///
+    /// If the CanSeek property is false, this has no effect.
+    fn seek(&self, offset: MprisDuration) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
 
     /// SetPosition method
-    fn set_position(&self, track_id: &TrackId, position: MprisDuration) -> zbus::Result<()>;
+    ///
+    /// If the CanSeek property is false, this has no effect.
+    fn set_position(
+        &self,
+        track_id: TrackId,
+        position: MprisDuration,
+    ) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
 
     /// Stop method
-    fn stop(&self) -> zbus::Result<()>;
+    ///
+    /// If CanControl is false, attempting to call this method should have no effect and raise an error.
+    fn stop(&self) -> impl Future<Output = zbus::fdo::Result<()>> + Send {
+        async { Ok(()) }
+    }
+
+    /// CanControl property
+    ///
+    /// If this is false, clients should assume that all properties on this interface are read-only
+    /// (and will raise errors if writing to them is attempted), no methods are implemented and all
+    /// other properties starting with "Can" are also false.
+    fn can_control(&self) -> impl Future<Output = zbus::fdo::Result<bool>> + Send {
+        async { Ok(false) }
+    }
+
+    /// CanGoNext property
+    ///
+    /// If CanControl is false, this property should also be false.
+    fn can_go_next(&self) -> impl Future<Output = zbus::fdo::Result<bool>> + Send {
+        async { Ok(false) }
+    }
+
+    /// CanGoPrevious property
+    ///
+    /// If CanControl is false, this property should also be false.
+    fn can_go_previous(&self) -> impl Future<Output = zbus::fdo::Result<bool>> + Send {
+        async { Ok(false) }
+    }
+
+    /// CanPause property
+    ///
+    /// If CanControl is false, this property should also be false.
+    fn can_pause(&self) -> impl Future<Output = zbus::fdo::Result<bool>> + Send {
+        async { Ok(false) }
+    }
+
+    /// CanPlay property
+    ///
+    /// If CanControl is false, this property should also be false.
+    fn can_play(&self) -> impl Future<Output = zbus::fdo::Result<bool>> + Send {
+        async { Ok(false) }
+    }
+
+    /// CanSeek property
+    ///
+    /// If CanControl is false, this property should also be false.
+    fn can_seek(&self) -> impl Future<Output = zbus::fdo::Result<bool>> + Send {
+        async { Ok(false) }
+    }
+
+    /// MaximumRate property
+    fn maximum_rate(&self) -> impl Future<Output = zbus::fdo::Result<f64>> + Send {
+        async { Ok(1.0) }
+    }
+
+    /// Metadata property
+    fn metadata(
+        &self,
+    ) -> impl Future<
+        Output = zbus::fdo::Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>>,
+    > + Send;
+
+    /// MinimumRate property
+    fn minimum_rate(&self) -> impl Future<Output = zbus::fdo::Result<f64>> + Send {
+        async { Ok(1.0) }
+    }
+
+    /// PlaybackStatus property
+    fn playback_status(&self) -> impl Future<Output = zbus::fdo::Result<String>> + Send;
+
+    /// Position property
+    fn position(&self) -> impl Future<Output = zbus::fdo::Result<MprisDuration>> + Send;
+
+    /// Rate property
+    ///
+    /// If the media player has no ability to play at speeds other than the normal playback rate,
+    /// this must still be implemented, and must return 1.0.
+    /// The MinimumRate and MaximumRate properties must also be set to 1.0.
+    fn rate(&self) -> impl Future<Output = zbus::fdo::Result<f64>> + Send {
+        async { Ok(1.0) }
+    }
+    fn set_rate(&self, value: f64) -> impl Future<Output = zbus::Result<()>> + Send {
+        async { Ok(()) }
+    }
+
+    /// Shuffle property (optional)
+    fn shuffle(&self) -> impl Future<Output = zbus::fdo::Result<bool>> + Send {
+        async { Ok(false) }
+    }
+    ///  If CanControl is false, attempting to set this property should have no effect and raise an error.
+    fn set_shuffle(&self, value: bool) -> impl Future<Output = zbus::Result<()>> + Send {
+        async { Err(zbus::Error::Unsupported) }
+    }
+
+    /// LoopStatus property (optional)
+    fn loop_status(&self) -> impl Future<Output = zbus::fdo::Result<String>> + Send {
+        async { Ok(LoopStatus::None.to_string()) }
+    }
+    /// If CanControl is false, attempting to set this property should have no effect and raise an error.
+    fn set_loop_status(&self, value: String) -> impl Future<Output = zbus::Result<()>> + Send {
+        async { Err(zbus::Error::Unsupported) }
+    }
+
+    /// Volume property
+    fn volume(&self) -> impl Future<Output = zbus::fdo::Result<f64>> + Send {
+        async { Ok(1.0) }
+    }
+    fn set_volume(&self, value: f64) -> impl Future<Output = zbus::Result<()>> + Send {
+        async { Err(zbus::Error::Unsupported) }
+    }
+}
+
+/// D-Bus interface for an MPRIS player.
+///
+/// It delegates the D-Bus calls to the given [PlayerProvider].
+pub struct Player<P>(pub P);
+
+#[interface(
+    name = "org.mpris.MediaPlayer2.Player",
+    proxy(default_path = "/org/mpris/MediaPlayer2",)
+)]
+impl<P> Player<P>
+where
+    P: PlayerProvider + Send + Sync + 'static,
+{
+    /// Next method
+    async fn next(&self) -> zbus::fdo::Result<()> {
+        self.0.next().await
+    }
+
+    /// OpenUri method
+    async fn open_uri(&self, uri: &str) -> zbus::fdo::Result<()> {
+        self.0.open_uri(uri).await
+    }
+
+    /// Pause method
+    async fn pause(&self) -> zbus::fdo::Result<()> {
+        self.0.pause().await
+    }
+
+    /// Play method
+    async fn play(&self) -> zbus::fdo::Result<()> {
+        self.0.play().await
+    }
+
+    /// PlayPause method
+    async fn play_pause(&self) -> zbus::fdo::Result<()> {
+        self.0.play_pause().await
+    }
+
+    /// Previous method
+    async fn previous(&self) -> zbus::fdo::Result<()> {
+        self.0.previous().await
+    }
+
+    /// Seek method
+    async fn seek(&self, offset: MprisDuration) -> zbus::fdo::Result<()> {
+        self.0.seek(offset).await
+    }
+
+    /// SetPosition method
+    async fn set_position(
+        &self,
+        track_id: TrackId,
+        position: MprisDuration,
+    ) -> zbus::fdo::Result<()> {
+        self.0.set_position(track_id, position).await
+    }
+
+    /// Stop method
+    async fn stop(&self) -> zbus::fdo::Result<()> {
+        self.0.stop().await
+    }
 
     /// Seeked signal
     #[zbus(signal)]
-    fn seeked(&self, position: MprisDuration) -> zbus::Result<()>;
+    async fn seeked(emitter: &SignalEmitter<'_>, position: MprisDuration) -> zbus::Result<()>;
 
     /// CanControl property
     #[zbus(property(emits_changed_signal = "false"))]
-    fn can_control(&self) -> zbus::Result<bool>;
+    async fn can_control(&self) -> zbus::fdo::Result<bool> {
+        self.0.can_control().await
+    }
 
     /// CanGoNext property
     #[zbus(property)]
-    fn can_go_next(&self) -> zbus::Result<bool>;
+    async fn can_go_next(&self) -> zbus::fdo::Result<bool> {
+        self.0.can_go_next().await
+    }
 
     /// CanGoPrevious property
     #[zbus(property)]
-    fn can_go_previous(&self) -> zbus::Result<bool>;
+    async fn can_go_previous(&self) -> zbus::fdo::Result<bool> {
+        self.0.can_go_previous().await
+    }
 
     /// CanPause property
     #[zbus(property)]
-    fn can_pause(&self) -> zbus::Result<bool>;
+    async fn can_pause(&self) -> zbus::fdo::Result<bool> {
+        self.0.can_pause().await
+    }
 
     /// CanPlay property
     #[zbus(property)]
-    fn can_play(&self) -> zbus::Result<bool>;
+    async fn can_play(&self) -> zbus::fdo::Result<bool> {
+        self.0.can_play().await
+    }
 
     /// CanSeek property
     #[zbus(property)]
-    fn can_seek(&self) -> zbus::Result<bool>;
+    async fn can_seek(&self) -> zbus::fdo::Result<bool> {
+        self.0.can_seek().await
+    }
 
     /// MaximumRate property
     #[zbus(property)]
-    fn maximum_rate(&self) -> zbus::Result<f64>;
+    async fn maximum_rate(&self) -> zbus::fdo::Result<f64> {
+        self.0.maximum_rate().await
+    }
 
     /// Metadata property
     #[zbus(property)]
-    fn metadata(
+    async fn metadata(
         &self,
-    ) -> zbus::Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>>;
+    ) -> zbus::fdo::Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>> {
+        self.0.metadata().await
+    }
 
     /// MinimumRate property
     #[zbus(property)]
-    fn minimum_rate(&self) -> zbus::Result<f64>;
+    async fn minimum_rate(&self) -> zbus::fdo::Result<f64> {
+        self.0.minimum_rate().await
+    }
 
     /// PlaybackStatus property
     #[zbus(property)]
-    fn playback_status(&self) -> zbus::Result<String>;
+    async fn playback_status(&self) -> zbus::fdo::Result<String> {
+        self.0.playback_status().await
+    }
 
     /// Position property
     #[zbus(property(emits_changed_signal = "false"))]
-    fn position(&self) -> zbus::Result<MprisDuration>;
+    async fn position(&self) -> zbus::fdo::Result<MprisDuration> {
+        self.0.position().await
+    }
 
     /// Rate property
     #[zbus(property)]
-    fn rate(&self) -> zbus::Result<f64>;
+    async fn rate(&self) -> zbus::fdo::Result<f64> {
+        self.0.rate().await
+    }
     #[zbus(property)]
-    fn set_rate(&self, value: f64) -> zbus::Result<()>;
+    async fn set_rate(&self, value: f64) -> zbus::Result<()> {
+        self.0.set_rate(value).await
+    }
 
     /// Shuffle property (optional)
     #[zbus(property)]
-    fn shuffle(&self) -> zbus::Result<bool>;
+    async fn shuffle(&self) -> zbus::fdo::Result<bool> {
+        self.0.shuffle().await
+    }
     #[zbus(property)]
-    fn set_shuffle(&self, value: bool) -> zbus::Result<()>;
+    async fn set_shuffle(&self, value: bool) -> zbus::Result<()> {
+        self.0.set_shuffle(value).await
+    }
 
     /// LoopStatus property (optional)
     #[zbus(property)]
-    fn loop_status(&self) -> zbus::Result<String>;
+    async fn loop_status(&self) -> zbus::fdo::Result<String> {
+        self.0.loop_status().await
+    }
     #[zbus(property)]
-    fn set_loop_status(&self, value: String) -> zbus::Result<()>;
+    async fn set_loop_status(&self, value: String) -> zbus::Result<()> {
+        self.0.set_loop_status(value).await
+    }
 
     /// Volume property
     #[zbus(property)]
-    fn volume(&self) -> zbus::Result<f64>;
+    async fn volume(&self) -> zbus::fdo::Result<f64> {
+        self.0.volume().await
+    }
     #[zbus(property)]
-    fn set_volume(&self, value: f64) -> zbus::Result<()>;
+    async fn set_volume(&self, value: f64) -> zbus::Result<()> {
+        self.0.set_volume(value).await
+    }
 }

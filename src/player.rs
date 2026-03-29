@@ -17,6 +17,7 @@ pub struct Player {
 
 impl Player {
     /// Creates a new instance of the `org.mpris.MediaPlayer2.Player` interface.
+    // TODO this being an OwnedBusName makes it really annoying to create a player
     pub async fn new(connection: &Connection, name: OwnedBusName) -> Result<Self> {
         PlayerProxy::builder(connection)
             .destination(name)?
@@ -51,7 +52,7 @@ impl Player {
     /// Sets the current track position.
     ///
     /// If `track` does not match the id of the currently-playing track, the call is ignored as "stale".
-    pub async fn set_position<D>(&self, track: &TrackId, position: D) -> Result<()>
+    pub async fn set_position<D>(&self, track: TrackId, position: D) -> Result<()>
     where
         D: Into<MprisDuration>,
     {
@@ -195,6 +196,7 @@ pub enum PlaybackStatus {
     Stopped,
 }
 
+// TODO turn this into a zbus type and use it directly in iface
 impl FromStr for PlaybackStatus {
     type Err = Error;
 

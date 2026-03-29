@@ -16,6 +16,8 @@ pub struct TrackList {
 
 impl TrackList {
     /// Creates a new instance of the `org.mpris.MediaPlayer2.TrackList` interface.
+    // TODO this being an OwnedBusName makes it really annoying to create a player
+    // (although not as bad since TrackList can be created from the MediaPlayer)
     pub async fn new(connection: &Connection, name: OwnedBusName) -> Result<Self> {
         TrackListProxy::builder(connection)
             .destination(name)?
