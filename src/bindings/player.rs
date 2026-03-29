@@ -22,6 +22,7 @@
 
 use zbus::proxy;
 
+use crate::bindings::MprisDuration;
 use crate::track::TrackId;
 
 #[proxy(
@@ -48,17 +49,17 @@ pub trait Player {
     fn previous(&self) -> zbus::Result<()>;
 
     /// Seek method
-    fn seek(&self, offset: i64) -> zbus::Result<()>;
+    fn seek(&self, offset: MprisDuration) -> zbus::Result<()>;
 
     /// SetPosition method
-    fn set_position(&self, track_id: &TrackId, position: i64) -> zbus::Result<()>;
+    fn set_position(&self, track_id: &TrackId, position: MprisDuration) -> zbus::Result<()>;
 
     /// Stop method
     fn stop(&self) -> zbus::Result<()>;
 
     /// Seeked signal
     #[zbus(signal)]
-    fn seeked(&self, position: i64) -> zbus::Result<()>;
+    fn seeked(&self, position: MprisDuration) -> zbus::Result<()>;
 
     /// CanControl property
     #[zbus(property)]
@@ -104,7 +105,7 @@ pub trait Player {
 
     /// Position property
     #[zbus(property)]
-    fn position(&self) -> zbus::Result<i64>;
+    fn position(&self) -> zbus::Result<MprisDuration>;
 
     /// Rate property
     #[zbus(property)]

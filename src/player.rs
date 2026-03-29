@@ -3,10 +3,10 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 use std::str::FromStr;
 
-use jiff::SignedDuration;
 use zbus::Connection;
 use zbus::names::OwnedBusName;
 
+use crate::bindings::MprisDuration;
 use crate::bindings::media_player::MediaPlayer2Proxy;
 use crate::bindings::player::PlayerProxy;
 use crate::error::{Error, Result};
@@ -41,9 +41,12 @@ impl Player {
     }
 
     /// Seeks the specified duration.
-    pub async fn seek(&self, duration: SignedDuration) -> Result<bool> {
+    pub async fn seek<D>(&self, duration: D) -> Result<bool>
+    where
+        D: Into<MprisDuration>,
+    {
         if self.proxy.can_seek().await? {
-            self.proxy.seek(duration.as_micros() as i64).await?;
+            self.proxy.seek(duration.into()).await?;
             Ok(true)
         } else {
             Ok(false)
@@ -53,9 +56,12 @@ impl Player {
     /// Sets the current track position.
     ///
     /// If `track` does not match the id of the currently-playing track, the call is ignored as "stale".
-    pub async fn set_position(&self, track: &TrackId, position: SignedDuration) -> Result<()> {
+    pub async fn set_position<D>(&self, track: &TrackId, position: D) -> Result<()>
+    where
+        D: Into<MprisDuration>,
+    {
         self.proxy
-            .set_position(track, position.as_micros() as i64)
+            .set_position(track, position.into())
             .await
             .map_err(Error::from)
     }
@@ -63,8 +69,8 @@ impl Player {
     /// How far into the current track the player is.
     ///
     /// Not all players support this, and it will return None if this is the case.
-    pub async fn position(&self) -> Result<Option<SignedDuration>> {
-        handle_optional(self.proxy.position().await.map(SignedDuration::from_micros))
+    pub async fn position(&self) -> Result<Option<MprisDuration>> {
+        handle_optional(self.proxy.position().await)
     }
 
     /// Gets the current playback status of the player.
