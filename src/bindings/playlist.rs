@@ -19,39 +19,42 @@
 //!
 //! …consequently `zbus-xmlgen` did not generate code for the above interfaces.
 
-use crate::playlists::{id::PlaylistId, ordering::PlaylistOrdering, playlist::Playlist};
 use zbus::proxy;
 
+use crate::playlists::id::PlaylistId;
+use crate::playlists::ordering::PlaylistOrdering;
+use crate::playlists::playlist::Playlist;
+
 #[proxy(
-	interface = "org.mpris.MediaPlayer2.Playlists",
-	default_path = "/org/mpris/MediaPlayer2"
+    interface = "org.mpris.MediaPlayer2.Playlists",
+    default_path = "/org/mpris/MediaPlayer2"
 )]
 pub trait Playlists {
-	/// ActivatePlaylist method
-	fn activate_playlist(&self, playlist_id: &PlaylistId) -> zbus::Result<()>;
+    /// ActivatePlaylist method
+    fn activate_playlist(&self, playlist_id: &PlaylistId) -> zbus::Result<()>;
 
-	/// GetPlaylists method
-	fn get_playlists(
-		&self,
-		index: u32,
-		max_count: u32,
-		order: PlaylistOrdering,
-		reverse_order: bool,
-	) -> zbus::Result<Vec<Playlist>>;
+    /// GetPlaylists method
+    fn get_playlists(
+        &self,
+        index: u32,
+        max_count: u32,
+        order: PlaylistOrdering,
+        reverse_order: bool,
+    ) -> zbus::Result<Vec<Playlist>>;
 
-	/// PlaylistChanged signal
-	#[zbus(signal)]
-	fn playlist_changed(&self, playlist: Playlist) -> zbus::Result<()>;
+    /// PlaylistChanged signal
+    #[zbus(signal)]
+    fn playlist_changed(&self, playlist: Playlist) -> zbus::Result<()>;
 
-	/// ActivePlaylist property
-	#[zbus(property)]
-	fn active_playlist(&self) -> zbus::Result<(bool, Playlist)>;
+    /// ActivePlaylist property
+    #[zbus(property)]
+    fn active_playlist(&self) -> zbus::Result<(bool, Playlist)>;
 
-	/// Orderings property
-	#[zbus(property)]
-	fn orderings(&self) -> zbus::Result<Vec<String>>;
+    /// Orderings property
+    #[zbus(property)]
+    fn orderings(&self) -> zbus::Result<Vec<String>>;
 
-	/// PlaylistCount property
-	#[zbus(property)]
-	fn playlist_count(&self) -> zbus::Result<u32>;
+    /// PlaylistCount property
+    #[zbus(property)]
+    fn playlist_count(&self) -> zbus::Result<u32>;
 }

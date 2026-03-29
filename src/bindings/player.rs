@@ -20,112 +20,113 @@
 //!
 //! …consequently `zbus-xmlgen` did not generate code for the above interfaces.
 
-use crate::track::TrackId;
 use zbus::proxy;
 
+use crate::track::TrackId;
+
 #[proxy(
-	interface = "org.mpris.MediaPlayer2.Player",
-	default_path = "/org/mpris/MediaPlayer2"
+    interface = "org.mpris.MediaPlayer2.Player",
+    default_path = "/org/mpris/MediaPlayer2"
 )]
 pub trait Player {
-	/// Next method
-	fn next(&self) -> zbus::Result<()>;
+    /// Next method
+    fn next(&self) -> zbus::Result<()>;
 
-	/// OpenUri method
-	fn open_uri(&self, uri: &str) -> zbus::Result<()>;
+    /// OpenUri method
+    fn open_uri(&self, uri: &str) -> zbus::Result<()>;
 
-	/// Pause method
-	fn pause(&self) -> zbus::Result<()>;
+    /// Pause method
+    fn pause(&self) -> zbus::Result<()>;
 
-	/// Play method
-	fn play(&self) -> zbus::Result<()>;
+    /// Play method
+    fn play(&self) -> zbus::Result<()>;
 
-	/// PlayPause method
-	fn play_pause(&self) -> zbus::Result<()>;
+    /// PlayPause method
+    fn play_pause(&self) -> zbus::Result<()>;
 
-	/// Previous method
-	fn previous(&self) -> zbus::Result<()>;
+    /// Previous method
+    fn previous(&self) -> zbus::Result<()>;
 
-	/// Seek method
-	fn seek(&self, offset: i64) -> zbus::Result<()>;
+    /// Seek method
+    fn seek(&self, offset: i64) -> zbus::Result<()>;
 
-	/// SetPosition method
-	fn set_position(&self, track_id: &TrackId, position: i64) -> zbus::Result<()>;
+    /// SetPosition method
+    fn set_position(&self, track_id: &TrackId, position: i64) -> zbus::Result<()>;
 
-	/// Stop method
-	fn stop(&self) -> zbus::Result<()>;
+    /// Stop method
+    fn stop(&self) -> zbus::Result<()>;
 
-	/// Seeked signal
-	#[zbus(signal)]
-	fn seeked(&self, position: i64) -> zbus::Result<()>;
+    /// Seeked signal
+    #[zbus(signal)]
+    fn seeked(&self, position: i64) -> zbus::Result<()>;
 
-	/// CanControl property
-	#[zbus(property)]
-	fn can_control(&self) -> zbus::Result<bool>;
+    /// CanControl property
+    #[zbus(property)]
+    fn can_control(&self) -> zbus::Result<bool>;
 
-	/// CanGoNext property
-	#[zbus(property)]
-	fn can_go_next(&self) -> zbus::Result<bool>;
+    /// CanGoNext property
+    #[zbus(property)]
+    fn can_go_next(&self) -> zbus::Result<bool>;
 
-	/// CanGoPrevious property
-	#[zbus(property)]
-	fn can_go_previous(&self) -> zbus::Result<bool>;
+    /// CanGoPrevious property
+    #[zbus(property)]
+    fn can_go_previous(&self) -> zbus::Result<bool>;
 
-	/// CanPause property
-	#[zbus(property)]
-	fn can_pause(&self) -> zbus::Result<bool>;
+    /// CanPause property
+    #[zbus(property)]
+    fn can_pause(&self) -> zbus::Result<bool>;
 
-	/// CanPlay property
-	#[zbus(property)]
-	fn can_play(&self) -> zbus::Result<bool>;
+    /// CanPlay property
+    #[zbus(property)]
+    fn can_play(&self) -> zbus::Result<bool>;
 
-	/// CanSeek property
-	#[zbus(property)]
-	fn can_seek(&self) -> zbus::Result<bool>;
+    /// CanSeek property
+    #[zbus(property)]
+    fn can_seek(&self) -> zbus::Result<bool>;
 
-	/// MaximumRate property
-	#[zbus(property)]
-	fn maximum_rate(&self) -> zbus::Result<f64>;
+    /// MaximumRate property
+    #[zbus(property)]
+    fn maximum_rate(&self) -> zbus::Result<f64>;
 
-	/// Metadata property
-	#[zbus(property)]
-	fn metadata(
-		&self,
-	) -> zbus::Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>>;
+    /// Metadata property
+    #[zbus(property)]
+    fn metadata(
+        &self,
+    ) -> zbus::Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>>;
 
-	/// MinimumRate property
-	#[zbus(property)]
-	fn minimum_rate(&self) -> zbus::Result<f64>;
+    /// MinimumRate property
+    #[zbus(property)]
+    fn minimum_rate(&self) -> zbus::Result<f64>;
 
-	/// PlaybackStatus property
-	#[zbus(property)]
-	fn playback_status(&self) -> zbus::Result<String>;
+    /// PlaybackStatus property
+    #[zbus(property)]
+    fn playback_status(&self) -> zbus::Result<String>;
 
-	/// Position property
-	#[zbus(property)]
-	fn position(&self) -> zbus::Result<i64>;
+    /// Position property
+    #[zbus(property)]
+    fn position(&self) -> zbus::Result<i64>;
 
-	/// Rate property
-	#[zbus(property)]
-	fn rate(&self) -> zbus::Result<f64>;
-	#[zbus(property)]
-	fn set_rate(&self, value: f64) -> zbus::Result<()>;
+    /// Rate property
+    #[zbus(property)]
+    fn rate(&self) -> zbus::Result<f64>;
+    #[zbus(property)]
+    fn set_rate(&self, value: f64) -> zbus::Result<()>;
 
-	/// Shuffle property (optional)
-	#[zbus(property)]
-	fn shuffle(&self) -> zbus::Result<bool>;
-	#[zbus(property)]
-	fn set_shuffle(&self, value: bool) -> zbus::Result<()>;
+    /// Shuffle property (optional)
+    #[zbus(property)]
+    fn shuffle(&self) -> zbus::Result<bool>;
+    #[zbus(property)]
+    fn set_shuffle(&self, value: bool) -> zbus::Result<()>;
 
-	/// LoopStatus property (optional)
-	#[zbus(property)]
-	fn loop_status(&self) -> zbus::Result<String>;
-	#[zbus(property)]
-	fn set_loop_status(&self, value: String) -> zbus::Result<()>;
+    /// LoopStatus property (optional)
+    #[zbus(property)]
+    fn loop_status(&self) -> zbus::Result<String>;
+    #[zbus(property)]
+    fn set_loop_status(&self, value: String) -> zbus::Result<()>;
 
-	/// Volume property
-	#[zbus(property)]
-	fn volume(&self) -> zbus::Result<f64>;
-	#[zbus(property)]
-	fn set_volume(&self, value: f64) -> zbus::Result<()>;
+    /// Volume property
+    #[zbus(property)]
+    fn volume(&self) -> zbus::Result<f64>;
+    #[zbus(property)]
+    fn set_volume(&self, value: f64) -> zbus::Result<()>;
 }

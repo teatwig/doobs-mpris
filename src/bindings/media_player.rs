@@ -23,41 +23,41 @@
 use zbus::proxy;
 
 #[proxy(
-	interface = "org.mpris.MediaPlayer2",
-	default_path = "/org/mpris/MediaPlayer2"
+    interface = "org.mpris.MediaPlayer2",
+    default_path = "/org/mpris/MediaPlayer2"
 )]
 pub trait MediaPlayer2 {
-	/// Quit method
-	fn quit(&self) -> zbus::Result<()>;
+    /// Quit method
+    fn quit(&self) -> zbus::Result<()>;
 
-	/// Raise method
-	fn raise(&self) -> zbus::Result<()>;
+    /// Raise method
+    fn raise(&self) -> zbus::Result<()>;
 
-	/// CanQuit property
-	#[zbus(property)]
-	fn can_quit(&self) -> zbus::Result<bool>;
+    /// CanQuit property
+    #[zbus(property)]
+    fn can_quit(&self) -> zbus::Result<bool>;
 
-	/// CanRaise property
-	#[zbus(property)]
-	fn can_raise(&self) -> zbus::Result<bool>;
+    /// CanRaise property
+    #[zbus(property)]
+    fn can_raise(&self) -> zbus::Result<bool>;
 
-	/// DesktopEntry property
-	#[zbus(property)]
-	fn desktop_entry(&self) -> zbus::Result<String>;
+    /// DesktopEntry property
+    #[zbus(property)]
+    fn desktop_entry(&self) -> zbus::Result<String>;
 
-	/// HasTrackList property
-	#[zbus(property)]
-	fn has_track_list(&self) -> zbus::Result<bool>;
+    /// HasTrackList property
+    #[zbus(property)]
+    fn has_track_list(&self) -> zbus::Result<bool>;
 
-	/// Identity property
-	#[zbus(property)]
-	fn identity(&self) -> zbus::Result<String>;
+    /// Identity property
+    #[zbus(property)]
+    fn identity(&self) -> zbus::Result<String>;
 
-	/// SupportedMimeTypes property
-	#[zbus(property)]
-	fn supported_mime_types(&self) -> zbus::Result<Vec<String>>;
+    /// SupportedMimeTypes property
+    #[zbus(property)]
+    fn supported_mime_types(&self) -> zbus::Result<Vec<String>>;
 
-	/// SupportedUriSchemes property
-	#[zbus(property)]
-	fn supported_uri_schemes(&self) -> zbus::Result<Vec<String>>;
+    /// SupportedUriSchemes property
+    #[zbus(property)]
+    fn supported_uri_schemes(&self) -> zbus::Result<Vec<String>>;
 }
