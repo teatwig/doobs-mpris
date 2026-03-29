@@ -62,7 +62,7 @@ pub trait Player {
     fn seeked(&self, position: MprisDuration) -> zbus::Result<()>;
 
     /// CanControl property
-    #[zbus(property)]
+    #[zbus(property(emits_changed_signal = "false"))]
     fn can_control(&self) -> zbus::Result<bool>;
 
     /// CanGoNext property
@@ -104,7 +104,7 @@ pub trait Player {
     fn playback_status(&self) -> zbus::Result<String>;
 
     /// Position property
-    #[zbus(property)]
+    #[zbus(property(emits_changed_signal = "false"))]
     fn position(&self) -> zbus::Result<MprisDuration>;
 
     /// Rate property
