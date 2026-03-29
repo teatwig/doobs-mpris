@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use futures_util::stream::StreamExt;
-use mpris2_zbus::enumerator::Enumerator;
+use doobs_mpris::enumerator::Enumerator;
 
 #[tokio::main]
 async fn main() -> zbus::Result<()> {
