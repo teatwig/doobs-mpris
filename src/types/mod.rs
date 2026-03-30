@@ -5,6 +5,12 @@
 mod duration;
 pub use duration::*;
 
+mod loop_status;
+pub use loop_status::*;
+
+mod playback_status;
+pub use playback_status::*;
+
 mod playlist;
 pub use playlist::*;
 

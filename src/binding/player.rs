@@ -25,8 +25,7 @@ use std::future::Future;
 use zbus::interface;
 use zbus::object_server::SignalEmitter;
 
-use crate::LoopStatus;
-use crate::types::{MprisDuration, TrackId};
+use crate::types::{LoopStatus, MprisDuration, PlaybackStatus, TrackId};
 
 /// Implement this trait to provide the main functionality of a player.
 ///
@@ -169,7 +168,7 @@ pub trait PlayerProvider {
     }
 
     /// PlaybackStatus property
-    fn playback_status(&self) -> impl Future<Output = zbus::fdo::Result<String>> + Send;
+    fn playback_status(&self) -> impl Future<Output = zbus::fdo::Result<PlaybackStatus>> + Send;
 
     /// Position property
     fn position(&self) -> impl Future<Output = zbus::fdo::Result<MprisDuration>> + Send;
@@ -196,11 +195,11 @@ pub trait PlayerProvider {
     }
 
     /// LoopStatus property (optional)
-    fn loop_status(&self) -> impl Future<Output = zbus::fdo::Result<String>> + Send {
-        async { Ok(LoopStatus::None.to_string()) }
+    fn loop_status(&self) -> impl Future<Output = zbus::fdo::Result<LoopStatus>> + Send {
+        async { Ok(LoopStatus::None) }
     }
     /// If CanControl is false, attempting to set this property should have no effect and raise an error.
-    fn set_loop_status(&self, value: String) -> impl Future<Output = zbus::Result<()>> + Send {
+    fn set_loop_status(&self, value: LoopStatus) -> impl Future<Output = zbus::Result<()>> + Send {
         async { Err(zbus::Error::Unsupported) }
     }
 
@@ -337,7 +336,7 @@ where
 
     /// PlaybackStatus property
     #[zbus(property)]
-    async fn playback_status(&self) -> zbus::fdo::Result<String> {
+    async fn playback_status(&self) -> zbus::fdo::Result<PlaybackStatus> {
         self.0.playback_status().await
     }
 
@@ -369,11 +368,11 @@ where
 
     /// LoopStatus property (optional)
     #[zbus(property)]
-    async fn loop_status(&self) -> zbus::fdo::Result<String> {
+    async fn loop_status(&self) -> zbus::fdo::Result<LoopStatus> {
         self.0.loop_status().await
     }
     #[zbus(property)]
-    async fn set_loop_status(&self, value: String) -> zbus::Result<()> {
+    async fn set_loop_status(&self, value: LoopStatus) -> zbus::Result<()> {
         self.0.set_loop_status(value).await
     }
 
