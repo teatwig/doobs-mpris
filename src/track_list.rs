@@ -5,10 +5,9 @@ use std::ops::Deref;
 use zbus::Connection;
 use zbus::names::OwnedBusName;
 
-use crate::bindings::track_list::TrackListProxy;
-use crate::error::{Error, Result};
-use crate::metadata::Metadata;
-use crate::track::TrackId;
+use crate::binding::TrackListProxy;
+use crate::types::TrackId;
+use crate::{Error, Metadata, Result};
 
 #[derive(Debug, Clone)]
 pub struct TrackList {

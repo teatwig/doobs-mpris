@@ -6,14 +6,9 @@ use std::str::FromStr;
 use zbus::Connection;
 use zbus::names::OwnedBusName;
 
-use crate::bindings::MprisDuration;
-use crate::bindings::media_player::MediaPlayer2Proxy;
-use crate::bindings::player::PlayerProxy;
-use crate::error::{Error, Result};
-use crate::handle_optional;
-use crate::media_player::MediaPlayer;
-use crate::metadata::Metadata;
-use crate::track::TrackId;
+use crate::binding::{MediaPlayer2Proxy, PlayerProxy};
+use crate::types::{MprisDuration, TrackId};
+use crate::{Error, MediaPlayer, Metadata, Result, handle_optional};
 
 #[derive(Debug, Clone)]
 pub struct Player {

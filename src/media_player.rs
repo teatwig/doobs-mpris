@@ -4,15 +4,8 @@ use std::ops::Deref;
 use zbus::Connection;
 use zbus::names::OwnedBusName;
 
-use crate::bindings::media_player::MediaPlayer2Proxy;
-use crate::bindings::player::PlayerProxy;
-use crate::bindings::playlist::PlaylistsProxy;
-use crate::bindings::track_list::TrackListProxy;
-use crate::enumerator::Enumerator;
-use crate::error::{Error, Result};
-use crate::player::Player;
-use crate::playlists::Playlists;
-use crate::track_list::TrackList;
+use crate::binding::{MediaPlayer2Proxy, PlayerProxy, PlaylistsProxy, TrackListProxy};
+use crate::{Enumerator, Error, Player, Playlists, Result, TrackList};
 
 #[derive(Debug, Clone)]
 pub struct MediaPlayer {

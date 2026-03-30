@@ -6,7 +6,7 @@ use serde::de::{self, Deserialize, Visitor};
 use serde::ser::{Serialize, Serializer};
 use zvariant::{Signature, Type, Value};
 
-use crate::error::{Error, Result};
+use crate::{Error, Result};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PlaylistOrdering {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use doobs_mpris::enumerator::Enumerator;
+use doobs_mpris::Enumerator;
 use futures_util::stream::StreamExt;
 
 #[tokio::main]

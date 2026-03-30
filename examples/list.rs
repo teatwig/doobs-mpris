@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
-use doobs_mpris::media_player::MediaPlayer;
-use doobs_mpris::playlists::ordering::PlaylistOrdering;
+use doobs_mpris::MediaPlayer;
+use doobs_mpris::types::PlaylistOrdering;
 use miette::{IntoDiagnostic, Result, WrapErr};
 use zbus::Connection;
 

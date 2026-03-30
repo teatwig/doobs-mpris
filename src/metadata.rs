@@ -6,7 +6,7 @@ use std::ops::{Deref, DerefMut};
 use jiff::{SignedDuration, Timestamp};
 use zbus::zvariant::{OwnedObjectPath, Value as ZValue};
 
-use crate::error::{Error, Result};
+use crate::{Error, Result};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Metadata {

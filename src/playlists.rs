@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
-pub mod id;
-pub mod ordering;
-pub mod playlist;
-
 use std::ops::Deref;
 
 use zbus::Connection;
 use zbus::names::OwnedBusName;
 
-use crate::bindings::playlist::PlaylistsProxy;
-use crate::error::{Error, Result};
+use crate::binding::PlaylistsProxy;
+use crate::{Error, Result};
 
 pub struct Playlists {
     proxy: PlaylistsProxy<'static>,

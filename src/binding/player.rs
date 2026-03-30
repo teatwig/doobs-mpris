@@ -22,8 +22,7 @@
 
 use zbus::proxy;
 
-use crate::bindings::MprisDuration;
-use crate::track::TrackId;
+use crate::types::{MprisDuration, TrackId};
 
 #[proxy(
     interface = "org.mpris.MediaPlayer2.Player",

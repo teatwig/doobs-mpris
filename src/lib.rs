@@ -1,13 +1,28 @@
 // SPDX-License-Identifier: MPL-2.0
-pub mod bindings;
-pub mod enumerator;
-pub mod error;
-pub mod media_player;
-pub mod metadata;
-pub mod player;
-pub mod playlists;
-pub mod track;
-pub mod track_list;
+pub mod binding;
+
+mod enumerator;
+pub use enumerator::*;
+
+mod error;
+pub use error::*;
+
+mod media_player;
+pub use media_player::*;
+
+mod metadata;
+pub use metadata::*;
+
+mod player;
+pub use player::*;
+
+mod playlists;
+pub use playlists::*;
+
+mod track_list;
+pub use track_list::*;
+
+pub mod types;
 
 pub(crate) fn handle_optional<T>(input: zbus::Result<T>) -> error::Result<Option<T>> {
     match input {

@@ -21,9 +21,7 @@
 
 use zbus::proxy;
 
-use crate::playlists::id::PlaylistId;
-use crate::playlists::ordering::PlaylistOrdering;
-use crate::playlists::playlist::Playlist;
+use crate::types::{Playlist, PlaylistId, PlaylistOrdering};
 
 #[proxy(
     interface = "org.mpris.MediaPlayer2.Playlists",

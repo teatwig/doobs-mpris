@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 use zbus::zvariant::{Type, Value};
 
-use super::id::PlaylistId;
+use crate::types::PlaylistId;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Value, Serialize, Deserialize)]
 pub struct Playlist((PlaylistId, String, String));
