@@ -9,6 +9,9 @@ use zvariant::{OwnedObjectPath, OwnedValue, Type, Value};
 
 use crate::{Error, Result};
 
+// TODO pop_os uses `u64` for integer types, other crates use `i32`
+// is there a specific type mpris expects or is it any integer?
+
 // list of metadata properties, see: https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/
 
 // MPRIS-specific properties
@@ -360,5 +363,255 @@ fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &Value) -> fmt::Result {
         }
         Value::Value(value) => write_zvalue(f, value),
         _ => write!(f, "{value:?}"),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+    use std::str::FromStr;
+
+    use jiff::SignedDuration;
+    use zvariant::{Array, Dict, ObjectPath, OwnedObjectPath, OwnedValue, Signature, Value};
+
+    use super::*;
+
+    #[test]
+    fn success() {
+        let mut expected: Metadata = HashMap::new().into();
+        expected.insert(
+            FIELD_TRACK_ID.to_string(),
+            ObjectPath::try_from("/hii").unwrap().into(),
+        );
+
+        let mut v = Dict::new(&Signature::Str, &Signature::Variant);
+        v.add(
+            FIELD_TRACK_ID,
+            Value::ObjectPath("/hii".try_into().unwrap()),
+        )
+        .unwrap();
+        let v = Value::Dict(v);
+        let ov = OwnedValue::try_from(v.clone()).unwrap();
+        let metadata = Metadata::try_from(ov).unwrap();
+
+        assert_eq!(metadata, expected);
+        assert_eq!(v, Value::from(expected));
+    }
+
+    #[test]
+    fn wrong_dbus_type() {
+        let v = Value::U64(5);
+        let ov = OwnedValue::try_from(v).unwrap();
+        let err = Metadata::try_from(ov).unwrap_err();
+
+        assert_eq!(zvariant::Error::IncorrectType, err);
+    }
+
+    #[test]
+    fn get_track_id() {
+        let metadata = new_metadata(FIELD_TRACK_ID, ObjectPath::try_from("/hii").unwrap());
+        assert_eq!(
+            metadata.track_id(),
+            Some(OwnedObjectPath::try_from("/hii".to_string()).unwrap())
+        );
+    }
+
+    #[test]
+    fn get_length() {
+        let metadata = new_metadata(FIELD_LENGTH, Value::I64(42 * 1000 * 1000));
+        assert_eq!(metadata.length(), Some(SignedDuration::from_secs(42)));
+    }
+
+    #[test]
+    fn get_art_url() {
+        let metadata = new_metadata(FIELD_ART_URL, Value::Str("https://my/cool/art".into()));
+        assert_eq!(metadata.art_url(), Some("https://my/cool/art".to_string()));
+    }
+
+    #[test]
+    fn get_album() {
+        let metadata = new_metadata(FIELD_ALBUM, Value::Str("The Album".into()));
+        assert_eq!(metadata.album(), Some("The Album".to_string()));
+    }
+
+    #[test]
+    fn get_album_artist() {
+        let mut arr = Array::new(&Signature::Str);
+        arr.append(Value::Str("Foo Artist".into())).unwrap();
+        arr.append(Value::Str("Bar Artist".into())).unwrap();
+        let metadata = new_metadata(FIELD_ALBUM_ARTIST, arr);
+        assert_eq!(
+            metadata.album_artists(),
+            Some(vec!["Foo Artist".to_string(), "Bar Artist".to_string()])
+        );
+    }
+
+    #[test]
+    fn get_artist() {
+        let mut arr = Array::new(&Signature::Str);
+        arr.append(Value::Str("Foo Artist".into())).unwrap();
+        arr.append(Value::Str("Bar Artist".into())).unwrap();
+        let metadata = new_metadata(FIELD_ARTIST, arr);
+        assert_eq!(
+            metadata.artists(),
+            Some(vec!["Foo Artist".to_string(), "Bar Artist".to_string()])
+        );
+    }
+
+    #[test]
+    fn get_lyrics() {
+        let metadata = new_metadata(
+            FIELD_AS_TEXT,
+            Value::Str("If I can live through this, I can do anything".into()),
+        );
+        assert_eq!(
+            metadata.lyrics(),
+            Some("If I can live through this, I can do anything".to_string())
+        );
+    }
+
+    #[test]
+    fn get_bpm() {
+        let metadata = new_metadata(FIELD_AUDIO_BPM, Value::U64(120));
+        assert_eq!(metadata.bpm(), Some(120));
+    }
+
+    #[test]
+    fn get_auto_rating() {
+        let metadata = new_metadata(FIELD_AUTO_RATING, Value::F64(0.7));
+        assert_eq!(metadata.auto_rating(), Some(0.7));
+    }
+
+    #[test]
+    fn get_comments() {
+        let mut arr = Array::new(&Signature::Str);
+        arr.append(Value::Str("Some comment".into())).unwrap();
+        arr.append(Value::Str("Another comment".into())).unwrap();
+        let metadata = new_metadata(FIELD_COMMENT, arr);
+        assert_eq!(
+            metadata.comments(),
+            Some(vec![
+                "Some comment".to_string(),
+                "Another comment".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn get_composers() {
+        let mut arr = Array::new(&Signature::Str);
+        arr.append(Value::Str("Chopin".into())).unwrap();
+        arr.append(Value::Str("Franchomme".into())).unwrap();
+        let metadata = new_metadata(FIELD_COMPOSER, arr);
+        assert_eq!(
+            metadata.composers(),
+            Some(vec!["Chopin".to_string(), "Franchomme".to_string()])
+        );
+    }
+
+    #[test]
+    fn get_created() {
+        let metadata = new_metadata(
+            FIELD_CONTENT_CREATED,
+            Value::Str("2007-04-29T13:56+01:00".into()),
+        );
+        assert_eq!(
+            metadata.created(),
+            Some(Timestamp::from_str("2007-04-29T13:56+01:00").unwrap())
+        );
+    }
+
+    #[test]
+    fn get_disc_number() {
+        let metadata = new_metadata(FIELD_DISC_NUMBER, Value::U64(2));
+        assert_eq!(metadata.disc_number(), Some(2));
+    }
+
+    #[test]
+    fn get_first_played() {
+        let metadata = new_metadata(
+            FIELD_FIRST_USED,
+            Value::Str("2007-04-29T13:56+01:00".into()),
+        );
+        assert_eq!(
+            metadata.first_played(),
+            Some(Timestamp::from_str("2007-04-29T13:56+01:00").unwrap())
+        );
+    }
+
+    #[test]
+    fn get_genres() {
+        let mut arr = Array::new(&Signature::Str);
+        arr.append(Value::Str("Pop".into())).unwrap();
+        arr.append(Value::Str("Rock".into())).unwrap();
+        let metadata = new_metadata(FIELD_GENRE, arr);
+        assert_eq!(
+            metadata.genres(),
+            Some(vec!["Pop".to_string(), "Rock".to_string()])
+        );
+    }
+
+    #[test]
+    fn get_last_played() {
+        let metadata = new_metadata(FIELD_LAST_USED, Value::Str("2007-04-29T13:56+01:00".into()));
+        assert_eq!(
+            metadata.last_played(),
+            Some(Timestamp::from_str("2007-04-29T13:56+01:00").unwrap())
+        );
+    }
+
+    #[test]
+    fn get_lyricists() {
+        let mut arr = Array::new(&Signature::Str);
+        arr.append(Value::Str("Frog in a Car".into())).unwrap();
+        arr.append(Value::Str("Potato Chip".into())).unwrap();
+        let metadata = new_metadata(FIELD_LYRICIST, arr);
+        assert_eq!(
+            metadata.lyricists(),
+            Some(vec!["Frog in a Car".to_string(), "Potato Chip".to_string()])
+        );
+    }
+
+    #[test]
+    fn get_title() {
+        let metadata = new_metadata(FIELD_TITLE, Value::Str("The Grid".into()));
+        assert_eq!(metadata.title(), Some("The Grid".to_string()));
+    }
+
+    #[test]
+    fn get_track_number() {
+        let metadata = new_metadata(FIELD_TRACK_NUMBER, Value::U64(7));
+        assert_eq!(metadata.track_number(), Some(7));
+    }
+
+    #[test]
+    fn get_url() {
+        let metadata = new_metadata(FIELD_URL, Value::Str("https://the/best/song/ever".into()));
+        assert_eq!(
+            metadata.url(),
+            Some("https://the/best/song/ever".to_string())
+        );
+    }
+
+    #[test]
+    fn get_play_count() {
+        let metadata = new_metadata(FIELD_USE_COUNT, Value::U64(123));
+        assert_eq!(metadata.play_count(), Some(123));
+    }
+
+    #[test]
+    fn get_user_rating() {
+        let metadata = new_metadata(FIELD_USER_RATING, Value::F64(0.9));
+        assert_eq!(metadata.user_rating(), Some(0.9));
+    }
+
+    fn new_metadata<'a, K, V>(key: K, value: V) -> Metadata
+    where
+        K: Into<String>,
+        V: Into<Value<'a>>,
+    {
+        let mut metadata: Metadata = HashMap::new().into();
+        metadata.insert(key.into(), value.into().try_into().unwrap());
+        metadata
     }
 }

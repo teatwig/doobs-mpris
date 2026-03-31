@@ -84,3 +84,58 @@ impl TryFrom<OwnedValue> for MprisDuration {
         Ok(MprisDuration::from_micros(micros))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use jiff::SignedDuration;
+    use zvariant::{OwnedValue, Value};
+
+    use super::MprisDuration;
+
+    #[test]
+    fn success_from_pos_i64() {
+        let expected = SignedDuration::from_secs(42).into();
+
+        let v = Value::I64(42 * 1000 * 1000);
+        let duration = MprisDuration::try_from(v.clone()).unwrap();
+
+        assert_eq!(duration, expected);
+        assert_eq!(v, Value::from(expected));
+
+        let ov = OwnedValue::try_from(v.clone()).unwrap();
+        let duration = MprisDuration::try_from(ov.clone()).unwrap();
+
+        assert_eq!(duration, expected);
+        assert_eq!(ov, OwnedValue::from(expected));
+    }
+
+    #[test]
+    fn success_from_neg_i64() {
+        let expected = SignedDuration::from_secs(-15).into();
+
+        let v = Value::I64(-15 * 1000 * 1000);
+        let duration = MprisDuration::try_from(v.clone()).unwrap();
+
+        assert_eq!(duration, expected);
+        assert_eq!(v, Value::from(expected));
+
+        let ov = OwnedValue::try_from(v).unwrap();
+        let duration = MprisDuration::try_from(ov.clone()).unwrap();
+
+        assert_eq!(duration, expected);
+        assert_eq!(ov, OwnedValue::from(expected));
+    }
+
+    #[test]
+    fn wrong_dbus_type() {
+        let v = Value::U64(5);
+        let err = MprisDuration::try_from(v.clone()).unwrap_err();
+
+        assert_eq!(zvariant::Error::IncorrectType, err);
+
+        let ov = OwnedValue::try_from(v).unwrap();
+        let err = MprisDuration::try_from(ov).unwrap_err();
+
+        assert_eq!(zvariant::Error::IncorrectType, err);
+    }
+}

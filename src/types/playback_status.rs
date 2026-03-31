@@ -77,3 +77,53 @@ impl TryFrom<OwnedValue> for PlaybackStatus {
         Ok(value)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use zvariant::{OwnedValue, Value};
+
+    use super::PlaybackStatus;
+
+    #[test]
+    fn success() {
+        let expected = PlaybackStatus::Paused;
+
+        // lowercase string works
+        let v = Value::Str("paused".into());
+        let status = PlaybackStatus::try_from(v.clone()).unwrap();
+
+        assert_eq!(status, expected);
+        assert_eq!(Value::Str("Paused".into()), Value::from(expected));
+
+        let ov = OwnedValue::try_from(v.clone()).unwrap();
+        let duration = PlaybackStatus::try_from(ov.clone()).unwrap();
+
+        assert_eq!(duration, expected);
+    }
+
+    #[test]
+    fn wrong_enum_type() {
+        let v = Value::Str("unknown".into());
+        let err = PlaybackStatus::try_from(v.clone()).unwrap_err();
+
+        assert!(matches!(err, zvariant::Error::Message(_)));
+
+        let ov = OwnedValue::try_from(v).unwrap();
+        let err = PlaybackStatus::try_from(ov).unwrap_err();
+
+        assert!(matches!(err, zvariant::Error::Message(_)));
+    }
+
+    #[test]
+    fn wrong_dbus_type() {
+        let v = Value::U64(5);
+        let err = PlaybackStatus::try_from(v.clone()).unwrap_err();
+
+        assert_eq!(zvariant::Error::IncorrectType, err);
+
+        let ov = OwnedValue::try_from(v).unwrap();
+        let err = PlaybackStatus::try_from(ov).unwrap_err();
+
+        assert_eq!(zvariant::Error::IncorrectType, err);
+    }
+}

@@ -110,3 +110,38 @@ impl Visitor<'_> for PlaylistOrderingVisitor {
         PlaylistOrdering::from_str(s).map_err(de::Error::custom)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use zvariant::Value;
+
+    use super::PlaylistOrdering;
+
+    #[test]
+    fn success() {
+        let expected = PlaylistOrdering::UserDefined;
+
+        // lowercase string works
+        let v = Value::Str("user".into());
+        let status = PlaylistOrdering::try_from(v.clone()).unwrap();
+
+        assert_eq!(status, expected);
+        assert_eq!(Value::Str("User".into()), Value::from(expected));
+    }
+
+    #[test]
+    fn wrong_enum_type() {
+        let v = Value::Str("unknown".into());
+        let err = PlaylistOrdering::try_from(v.clone()).unwrap_err();
+
+        assert!(matches!(err, zvariant::Error::Message(_)));
+    }
+
+    #[test]
+    fn wrong_dbus_type() {
+        let v = Value::U64(5);
+        let err = PlaylistOrdering::try_from(v.clone()).unwrap_err();
+
+        assert_eq!(zvariant::Error::IncorrectType, err);
+    }
+}
