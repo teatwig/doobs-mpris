@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 use serde::{Deserialize, Serialize};
-use zbus::zvariant::{Type, Value};
+use zvariant::{Type, Value};
 
 use crate::types::PlaylistId;
 

@@ -63,8 +63,7 @@ impl TryFrom<Value<'_>> for LoopStatus {
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
         let value = value.downcast_ref::<&str>()?;
-        let value =
-            LoopStatus::from_str(value).map_err(|err| zvariant::Error::Message(err.to_string()))?;
+        let value = LoopStatus::from_str(value)?;
         Ok(value)
     }
 }
@@ -74,8 +73,7 @@ impl TryFrom<OwnedValue> for LoopStatus {
 
     fn try_from(value: OwnedValue) -> std::result::Result<Self, Self::Error> {
         let value = value.downcast_ref::<&str>()?;
-        let value =
-            LoopStatus::from_str(value).map_err(|err| zvariant::Error::Message(err.to_string()))?;
+        let value = LoopStatus::from_str(value)?;
         Ok(value)
     }
 }

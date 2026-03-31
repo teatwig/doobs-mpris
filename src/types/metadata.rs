@@ -5,8 +5,7 @@ use std::ops::{Deref, DerefMut};
 
 use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
-use zbus::zvariant::{OwnedObjectPath, Value as ZValue};
-use zvariant::{OwnedValue, Type};
+use zvariant::{OwnedObjectPath, OwnedValue, Type, Value};
 
 use crate::{Error, Result};
 
@@ -292,7 +291,7 @@ impl Type for Metadata {
     const SIGNATURE: &'static zvariant::Signature = &zvariant::signature!("a{sv}");
 }
 
-impl From<Metadata> for ZValue<'_> {
+impl From<Metadata> for Value<'_> {
     fn from(value: Metadata) -> Self {
         value.inner.into()
     }
@@ -322,20 +321,20 @@ pub fn try_value_into_date(value: OwnedValue) -> Result<Timestamp> {
     Ok(value)
 }
 
-fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &ZValue) -> fmt::Result {
+fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &Value) -> fmt::Result {
     match value {
-        ZValue::U8(b) => write!(f, "{b}"),
-        ZValue::Bool(b) => write!(f, "{b}"),
-        ZValue::I16(i) => write!(f, "{i}"),
-        ZValue::U16(u) => write!(f, "{u}"),
-        ZValue::I32(i) => write!(f, "{i}"),
-        ZValue::U32(u) => write!(f, "{u}"),
-        ZValue::I64(i) => write!(f, "{i}"),
-        ZValue::U64(u) => write!(f, "{u}"),
-        ZValue::F64(d) => write!(f, "{d}"),
-        ZValue::Str(s) => write!(f, "\"{s}\""),
-        ZValue::ObjectPath(p) => write!(f, "\"{p}\""),
-        ZValue::Array(a) => {
+        Value::U8(b) => write!(f, "{b}"),
+        Value::Bool(b) => write!(f, "{b}"),
+        Value::I16(i) => write!(f, "{i}"),
+        Value::U16(u) => write!(f, "{u}"),
+        Value::I32(i) => write!(f, "{i}"),
+        Value::U32(u) => write!(f, "{u}"),
+        Value::I64(i) => write!(f, "{i}"),
+        Value::U64(u) => write!(f, "{u}"),
+        Value::F64(d) => write!(f, "{d}"),
+        Value::Str(s) => write!(f, "\"{s}\""),
+        Value::ObjectPath(p) => write!(f, "\"{p}\""),
+        Value::Array(a) => {
             write!(f, "[")?;
             let mut iter = a.iter().peekable();
             while let Some(value) = iter.next() {
@@ -347,7 +346,7 @@ fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &ZValue) -> fmt::Result {
             }
             write!(f, "]")
         }
-        ZValue::Dict(d) => {
+        Value::Dict(d) => {
             write!(f, "{{")?;
             let mut iter = d.iter().peekable();
             while let Some((k, v)) = iter.next() {
@@ -359,9 +358,7 @@ fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &ZValue) -> fmt::Result {
             }
             write!(f, "}}")
         }
-        ZValue::Value(value) => write_zvalue(f, value),
-        ZValue::Signature(_) => write!(f, "(unsupported signature)"),
-        ZValue::Structure(_) => write!(f, "(unsupported structure)"),
-        ZValue::Fd(_) => write!(f, "(unsuppored fd)"),
+        Value::Value(value) => write_zvalue(f, value),
+        _ => write!(f, "{value:?}"),
     }
 }

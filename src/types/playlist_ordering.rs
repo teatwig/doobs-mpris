@@ -27,18 +27,12 @@ impl Type for PlaylistOrdering {
 }
 
 impl TryFrom<Value<'_>> for PlaylistOrdering {
-    type Error = Error;
+    type Error = zvariant::Error;
 
-    fn try_from(value: Value) -> Result<Self> {
-        match value {
-            Value::Str(value) => Self::from_str(&value),
-            _ => Err(Error::IncorrectValue {
-                wanted: "Str",
-                actual: value
-                    .try_to_owned()
-                    .map_err(|e| Error::Zbus(zbus::Error::Variant(e)))?,
-            }),
-        }
+    fn try_from(value: Value) -> zvariant::Result<Self> {
+        let value: &str = value.downcast_ref::<&str>()?;
+        let value = PlaylistOrdering::from_str(value)?;
+        Ok(value)
     }
 }
 

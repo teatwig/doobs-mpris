@@ -4,7 +4,7 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
-use zbus::zvariant::{ObjectPath, OwnedObjectPath, Type, Value};
+use zvariant::{ObjectPath, OwnedObjectPath, Type, Value};
 
 /// A reference to an MPRIS track.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Serialize, Deserialize, Value)]
