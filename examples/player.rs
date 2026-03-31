@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use doobs_mpris::binding::{PlayerProvider, PlayerProxy};
-use doobs_mpris::types::MprisDuration;
+use doobs_mpris::types::{Metadata, MprisDuration, PlaybackStatus};
 use jiff::SignedDuration;
 use miette::{IntoDiagnostic, Result, WrapErr};
 use zbus::Connection;
@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
         .into_diagnostic()
         .wrap_err("Failed to get metadata from Foo player")?;
 
-    println!("Current track on Foo player has the following metadata: {metadata:?}");
+    println!("Current track on Foo player has the following metadata: {metadata}");
 
     Ok(())
 }
@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
 struct FooPlayerProvider;
 
 impl PlayerProvider for FooPlayerProvider {
-    async fn metadata(&self) -> zbus::fdo::Result<HashMap<String, zvariant::OwnedValue>> {
+    async fn metadata(&self) -> zbus::fdo::Result<Metadata> {
         let track_id: zvariant::OwnedValue =
             zvariant::Value::from("/noplaylist").try_into().unwrap();
         let title: zvariant::OwnedValue = zvariant::Value::from("A Really Cool Song")
@@ -69,11 +69,11 @@ impl PlayerProvider for FooPlayerProvider {
         let mut metadata = HashMap::new();
         metadata.insert("mpris:trackid".to_string(), track_id); // trackid is required
         metadata.insert("xesam:title".to_string(), title);
-        Ok(metadata)
+        Ok(metadata.into())
     }
 
-    async fn playback_status(&self) -> zbus::fdo::Result<String> {
-        Ok("Playing".to_string())
+    async fn playback_status(&self) -> zbus::fdo::Result<PlaybackStatus> {
+        Ok(PlaybackStatus::Playing)
     }
 
     async fn position(&self) -> zbus::fdo::Result<MprisDuration> {

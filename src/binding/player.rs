@@ -25,7 +25,7 @@ use std::future::Future;
 use zbus::interface;
 use zbus::object_server::SignalEmitter;
 
-use crate::types::{LoopStatus, MprisDuration, PlaybackStatus, TrackId};
+use crate::types::{LoopStatus, Metadata, MprisDuration, PlaybackStatus, TrackId};
 
 /// Implement this trait to provide the main functionality of a player.
 ///
@@ -156,11 +156,7 @@ pub trait PlayerProvider {
     }
 
     /// Metadata property
-    fn metadata(
-        &self,
-    ) -> impl Future<
-        Output = zbus::fdo::Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>>,
-    > + Send;
+    fn metadata(&self) -> impl Future<Output = zbus::fdo::Result<Metadata>> + Send;
 
     /// MinimumRate property
     fn minimum_rate(&self) -> impl Future<Output = zbus::fdo::Result<f64>> + Send {
@@ -322,9 +318,7 @@ where
 
     /// Metadata property
     #[zbus(property)]
-    async fn metadata(
-        &self,
-    ) -> zbus::fdo::Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>> {
+    async fn metadata(&self) -> zbus::fdo::Result<Metadata> {
         self.0.metadata().await
     }
 

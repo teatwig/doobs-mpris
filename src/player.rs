@@ -5,8 +5,8 @@ use zbus::Connection;
 use zbus::names::OwnedBusName;
 
 use crate::binding::{MediaPlayer2Proxy, PlayerProxy};
-use crate::types::{LoopStatus, MprisDuration, PlaybackStatus, TrackId};
-use crate::{Error, MediaPlayer, Metadata, Result, handle_optional};
+use crate::types::{LoopStatus, Metadata, MprisDuration, PlaybackStatus, TrackId};
+use crate::{Error, MediaPlayer, Result, handle_optional};
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -115,11 +115,7 @@ impl Player {
 
     /// Returns the metadata for the player.
     pub async fn metadata(&self) -> Result<Metadata> {
-        self.proxy
-            .metadata()
-            .await
-            .map(|metadata| metadata.into())
-            .map_err(Error::from)
+        self.proxy.metadata().await.map_err(Error::from)
     }
 
     /// Whether the current playlist is shuffled or not.

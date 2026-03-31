@@ -21,7 +21,7 @@
 
 use zbus::proxy;
 
-use crate::types::TrackId;
+use crate::types::{Metadata, TrackId};
 
 #[proxy(
     interface = "org.mpris.MediaPlayer2.TrackList",
@@ -33,10 +33,7 @@ pub trait TrackList {
     -> zbus::Result<()>;
 
     /// GetTracksMetadata method
-    fn get_tracks_metadata(
-        &self,
-        track_ids: Vec<TrackId>,
-    ) -> zbus::Result<Vec<std::collections::HashMap<String, zbus::zvariant::OwnedValue>>>;
+    fn get_tracks_metadata(&self, track_ids: Vec<TrackId>) -> zbus::Result<Vec<Metadata>>;
 
     /// GoTo method
     fn go_to(&self, track_id: &TrackId) -> zbus::Result<()>;

@@ -10,9 +10,6 @@ pub use error::*;
 mod media_player;
 pub use media_player::*;
 
-mod metadata;
-pub use metadata::*;
-
 mod player;
 pub use player::*;
 

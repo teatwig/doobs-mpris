@@ -21,6 +21,9 @@ pub enum Error {
         actual: zvariant::OwnedValue,
     },
 
+    #[error("Failed to parse as a timestamp")]
+    InvalidTimestamp(#[from] jiff::Error),
+
     /// A zbus error.
     #[error("zbus error: {0}")]
     Zbus(zbus::Error),

@@ -8,6 +8,9 @@ pub use duration::*;
 mod loop_status;
 pub use loop_status::*;
 
+mod metadata;
+pub use metadata::*;
+
 mod playback_status;
 pub use playback_status::*;
 

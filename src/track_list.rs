@@ -6,8 +6,8 @@ use zbus::Connection;
 use zbus::names::OwnedBusName;
 
 use crate::binding::TrackListProxy;
-use crate::types::TrackId;
-use crate::{Error, Metadata, Result};
+use crate::types::{Metadata, TrackId};
+use crate::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub struct TrackList {
@@ -49,7 +49,6 @@ impl TrackList {
         self.proxy
             .get_tracks_metadata(tracks.as_ref().to_vec())
             .await
-            .map(|x| x.into_iter().map(Metadata::from).collect())
             .map_err(Error::from)
     }
 
