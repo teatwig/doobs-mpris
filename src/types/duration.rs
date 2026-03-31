@@ -3,11 +3,12 @@ use std::fmt::Debug;
 use std::ops::Deref;
 
 use jiff::SignedDuration;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use zvariant::{OwnedValue, Type, Value};
 
 /// Simple wrapper around [jiff::SignedDuration] to allow using it as a zbus type.
-#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct MprisDuration(SignedDuration);
 
 impl MprisDuration {
@@ -64,7 +65,7 @@ impl TryFrom<Value<'_>> for MprisDuration {
     type Error = zvariant::Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
-        let micros = value.downcast_ref::<i64>()?;
+        let micros: i64 = value.try_into()?;
         Ok(MprisDuration::from_micros(micros))
     }
 }
@@ -79,26 +80,7 @@ impl TryFrom<OwnedValue> for MprisDuration {
     type Error = zvariant::Error;
 
     fn try_from(value: OwnedValue) -> std::result::Result<Self, Self::Error> {
-        let micros = value.downcast_ref::<i64>()?;
-        Ok(MprisDuration::from_micros(micros))
-    }
-}
-
-impl Serialize for MprisDuration {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_i64(self.as_micros_i64())
-    }
-}
-
-impl<'de> Deserialize<'de> for MprisDuration {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let micros = i64::deserialize(deserializer)?;
+        let micros: i64 = value.try_into()?;
         Ok(MprisDuration::from_micros(micros))
     }
 }

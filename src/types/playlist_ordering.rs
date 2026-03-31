@@ -26,10 +26,10 @@ impl Type for PlaylistOrdering {
     const SIGNATURE: &'static Signature = String::SIGNATURE;
 }
 
-impl<'a> TryFrom<Value<'a>> for PlaylistOrdering {
+impl TryFrom<Value<'_>> for PlaylistOrdering {
     type Error = Error;
 
-    fn try_from(value: Value<'a>) -> Result<Self> {
+    fn try_from(value: Value) -> Result<Self> {
         match value {
             Value::Str(value) => Self::from_str(&value),
             _ => Err(Error::IncorrectValue {
@@ -42,7 +42,7 @@ impl<'a> TryFrom<Value<'a>> for PlaylistOrdering {
     }
 }
 
-impl<'a> From<PlaylistOrdering> for Value<'a> {
+impl From<PlaylistOrdering> for Value<'_> {
     fn from(ordering: PlaylistOrdering) -> Self {
         Value::Str(ordering.to_string().into())
     }
