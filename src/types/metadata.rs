@@ -10,7 +10,62 @@ use zvariant::{OwnedValue, Type};
 
 use crate::{Error, Result};
 
+// list of metadata properties, see: https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/
+
+// MPRIS-specific properties
+
+/// D-Bus path: A unique identity for this track within the context of an MPRIS object (eg: tracklist).
+const FIELD_TRACK_ID: &str = "mpris:trackid";
+/// 64-bit integer: The duration of the track in microseconds.
+const FIELD_LENGTH: &str = "mpris:length";
+/// URI: The location of an image representing the track or album.
+/// Clients should not assume this will continue to exist when the media player stops giving out the URL.
+const FIELD_ART_URL: &str = "mpris:artUrl";
+
+// Common Xesam properties
+
+/// String: The album name.
+const FIELD_ALBUM: &str = "xesam:album";
+/// List of Strings: The album artist(s).
+const FIELD_ALBUM_ARTIST: &str = "xesam:albumArtist";
+/// List of Strings: The track artist(s).
+const FIELD_ARTIST: &str = "xesam:artist";
+/// String: The track lyrics.
+const FIELD_AS_TEXT: &str = "xesam:asText";
+/// Integer: The speed of the music, in beats per minute.
+const FIELD_AUDIO_BPM: &str = "xesam:audioBPM";
+/// Float: An automatically-generated rating, based on things such as how often it has been played.
+/// This should be in the range 0.0 to 1.0.
+const FIELD_AUTO_RATING: &str = "xesam:autoRating";
+/// List of Strings: A (list of) freeform comment(s).
+const FIELD_COMMENT: &str = "xesam:comment";
+/// List of Strings: The composer(s) of the track.
+const FIELD_COMPOSER: &str = "xesam:composer";
+/// Date/Time: When the track was created. Usually only the year component will be useful.
+const FIELD_CONTENT_CREATED: &str = "xesam:contentCreated";
+/// Integer: The disc number on the album that this track is from.
+const FIELD_DISC_NUMBER: &str = "xesam:discNumber";
+/// Date/Time: When the track was first played.
+const FIELD_FIRST_USED: &str = "xesam:firstUsed";
+/// List of Strings: The genre(s) of the track.
+const FIELD_GENRE: &str = "xesam:genre";
+/// Date/Time: When the track was last played.
+const FIELD_LAST_USED: &str = "xesam:lastUsed";
+/// List of Strings: The lyricist(s) of the track.
+const FIELD_LYRICIST: &str = "xesam:lyricist";
+/// String: The track title.
+const FIELD_TITLE: &str = "xesam:title";
+/// Integer: The track number on the album disc.
+const FIELD_TRACK_NUMBER: &str = "xesam:trackNumber";
+/// URI: The location of the media file.
+const FIELD_URL: &str = "xesam:url";
+/// Integer: The number of times the track has been played.
+const FIELD_USE_COUNT: &str = "xesam:useCount";
+/// Float: A user-specified rating. This should be in the range 0.0 to 1.0.
+const FIELD_USER_RATING: &str = "xesam:userRating";
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct Metadata {
     inner: HashMap<String, OwnedValue>,
 }
@@ -19,7 +74,7 @@ impl Metadata {
     /// `xesam:album`: The track artist(s).
     pub fn album(&self) -> Option<String> {
         self.inner
-            .get("xesam:album")
+            .get(FIELD_ALBUM)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -27,7 +82,7 @@ impl Metadata {
     /// `xesam:artist`: The track artist(s).
     pub fn artists(&self) -> Option<Vec<String>> {
         self.inner
-            .get("xesam:artist")
+            .get(FIELD_ARTIST)
             .cloned()
             .and_then(|artists| artists.try_into().ok())
     }
@@ -35,7 +90,7 @@ impl Metadata {
     /// `xesam:asText`: The track lyrics.
     pub fn lyrics(&self) -> Option<String> {
         self.inner
-            .get("xesam:asText")
+            .get(FIELD_AS_TEXT)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -43,7 +98,7 @@ impl Metadata {
     /// `xesam:albumArtist`: The album artist(s).
     pub fn album_artists(&self) -> Option<Vec<String>> {
         self.inner
-            .get("xesam:albumArtist")
+            .get(FIELD_ALBUM_ARTIST)
             .cloned()
             .and_then(|artists| artists.try_into().ok())
     }
@@ -51,7 +106,7 @@ impl Metadata {
     /// `xesam:audioBPM`: The speed of the music, in beats per minute.
     pub fn bpm(&self) -> Option<u64> {
         self.inner
-            .get("xesam:audioBPM")
+            .get(FIELD_AUDIO_BPM)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -60,15 +115,23 @@ impl Metadata {
     /// This should be in the range 0.0 to 1.0.
     pub fn auto_rating(&self) -> Option<f64> {
         self.inner
-            .get("xesam:autoRating")
+            .get(FIELD_AUTO_RATING)
+            .cloned()
+            .and_then(|v| v.try_into().ok())
+    }
+
+    /// `xesam:comment`: A (list of) freeform comment(s).
+    pub fn comments(&self) -> Option<Vec<String>> {
+        self.inner
+            .get(FIELD_COMMENT)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
 
     /// `xesam:composer`: The composer(s) of the track.
-    pub fn composer(&self) -> Option<Vec<String>> {
+    pub fn composers(&self) -> Option<Vec<String>> {
         self.inner
-            .get("xesam:composer")
+            .get(FIELD_COMPOSER)
             .cloned()
             .and_then(|composers| composers.try_into().ok())
     }
@@ -76,7 +139,7 @@ impl Metadata {
     /// `xesam:contentCreated`: When the track was created. Usually only the year component will be useful.
     pub fn created(&self) -> Option<Timestamp> {
         self.inner
-            .get("xesam:contentCreated")
+            .get(FIELD_CONTENT_CREATED)
             .cloned()
             .and_then(|v| try_value_into_date(v).ok())
     }
@@ -84,7 +147,7 @@ impl Metadata {
     /// `xesam:discNumber`: The disc number on the album that this track is from.
     pub fn disc_number(&self) -> Option<u64> {
         self.inner
-            .get("xesam:discNumber")
+            .get(FIELD_DISC_NUMBER)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -92,15 +155,15 @@ impl Metadata {
     /// `xesam:firstUsed`: When the track was first played.
     pub fn first_played(&self) -> Option<Timestamp> {
         self.inner
-            .get("xesam:firstUsed")
+            .get(FIELD_FIRST_USED)
             .cloned()
             .and_then(|v| try_value_into_date(v).ok())
     }
 
     /// `xesam:genre`: The genre(s) of the track.
-    pub fn genre(&self) -> Option<Vec<String>> {
+    pub fn genres(&self) -> Option<Vec<String>> {
         self.inner
-            .get("xesam:genre")
+            .get(FIELD_GENRE)
             .cloned()
             .and_then(|genres| genres.try_into().ok())
     }
@@ -108,15 +171,15 @@ impl Metadata {
     /// `xesam:lastUsed`: When the track was last played.
     pub fn last_played(&self) -> Option<Timestamp> {
         self.inner
-            .get("xesam:lastUsed")
+            .get(FIELD_LAST_USED)
             .cloned()
             .and_then(|v| try_value_into_date(v).ok())
     }
 
     /// `xesam:lyricist`: The lyricist(s) of the track.
-    pub fn lyricist(&self) -> Option<Vec<String>> {
+    pub fn lyricists(&self) -> Option<Vec<String>> {
         self.inner
-            .get("xesam:lyricist")
+            .get(FIELD_LYRICIST)
             .cloned()
             .and_then(|lyricists| lyricists.try_into().ok())
     }
@@ -124,7 +187,7 @@ impl Metadata {
     /// `xesam:title`: The track title.
     pub fn title(&self) -> Option<String> {
         self.inner
-            .get("xesam:title")
+            .get(FIELD_TITLE)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -132,7 +195,7 @@ impl Metadata {
     /// `xesam:trackNumber`: The track number on the album that this track is from.
     pub fn track_number(&self) -> Option<u64> {
         self.inner
-            .get("xesam:trackNumber")
+            .get(FIELD_TRACK_NUMBER)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -140,15 +203,15 @@ impl Metadata {
     /// `xesam:url`: The location of the media file.
     pub fn url(&self) -> Option<String> {
         self.inner
-            .get("xesam:url")
+            .get(FIELD_URL)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
 
     /// `xesam:useCount`: The number of times the track has been played.
-    pub fn use_count(&self) -> Option<u64> {
+    pub fn play_count(&self) -> Option<u64> {
         self.inner
-            .get("xesam:useCount")
+            .get(FIELD_USE_COUNT)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -156,7 +219,7 @@ impl Metadata {
     /// `xesam:userRating`: The user's rating of the track.
     pub fn user_rating(&self) -> Option<f64> {
         self.inner
-            .get("xesam:userRating")
+            .get(FIELD_USER_RATING)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }
@@ -164,7 +227,7 @@ impl Metadata {
     /// `mpris:trackid`: D-Bus path: A unique identity for this track within the context of an MPRIS object (eg: tracklist).
     pub fn track_id(&self) -> Option<OwnedObjectPath> {
         self.inner
-            .get("mpris:trackid")
+            .get(FIELD_TRACK_ID)
             .cloned()
             .and_then(|path| OwnedObjectPath::try_from(path).ok())
     }
@@ -172,7 +235,7 @@ impl Metadata {
     /// `mpris:length`: The length of the track in microseconds.
     pub fn length(&self) -> Option<SignedDuration> {
         self.inner
-            .get("mpris:length")
+            .get(FIELD_LENGTH)
             .cloned()
             .and_then(|v| i64::try_from(v).ok())
             .map(SignedDuration::from_micros)
@@ -182,7 +245,7 @@ impl Metadata {
     /// Clients should not assume this will continue to exist when the media player stops giving out the URL.
     pub fn art_url(&self) -> Option<String> {
         self.inner
-            .get("mpris:artUrl")
+            .get(FIELD_ART_URL)
             .cloned()
             .and_then(|v| v.try_into().ok())
     }

@@ -104,7 +104,7 @@ async fn main() -> Result<()> {
                 if let Some(artists) = metadata.artists() {
                     println!("\t\t\tArtists: {}", artists.join(", "));
                 }
-                if let Some(composers) = metadata.composer() {
+                if let Some(composers) = metadata.composers() {
                     println!("\t\t\tComposers: {}", composers.join(", "));
                 }
                 if let Some(bpm) = metadata.bpm() {
