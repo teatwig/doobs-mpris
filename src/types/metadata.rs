@@ -5,12 +5,9 @@ use std::ops::{Deref, DerefMut};
 
 use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
-use zvariant::{OwnedObjectPath, OwnedValue, Type, Value};
+use zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Type, Value};
 
 use crate::{Error, Result};
-
-// TODO pop_os uses `u64` for integer types, other crates use `i32`
-// is there a specific type mpris expects or is it any integer?
 
 // list of metadata properties, see: https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/
 
@@ -73,6 +70,14 @@ pub struct Metadata {
 }
 
 impl Metadata {
+    pub fn new(track_id: ObjectPath) -> Self {
+        let mut metadata = Self {
+            inner: HashMap::new(),
+        };
+        metadata.insert(FIELD_TRACK_ID.to_string(), track_id.into());
+        metadata
+    }
+
     /// `xesam:album`: The track artist(s).
     pub fn album(&self) -> Option<String> {
         self.inner
@@ -106,11 +111,11 @@ impl Metadata {
     }
 
     /// `xesam:audioBPM`: The speed of the music, in beats per minute.
-    pub fn bpm(&self) -> Option<u64> {
+    pub fn bpm(&self) -> Option<u32> {
         self.inner
             .get(FIELD_AUDIO_BPM)
             .cloned()
-            .and_then(|v| v.try_into().ok())
+            .and_then(|v| try_value_into_integer(v).ok())
     }
 
     /// `xesam:autoRating`: An automatically-generated rating, based on things such as how often it has been played.
@@ -147,11 +152,11 @@ impl Metadata {
     }
 
     /// `xesam:discNumber`: The disc number on the album that this track is from.
-    pub fn disc_number(&self) -> Option<u64> {
+    pub fn disc_number(&self) -> Option<u32> {
         self.inner
             .get(FIELD_DISC_NUMBER)
             .cloned()
-            .and_then(|v| v.try_into().ok())
+            .and_then(|v| try_value_into_integer(v).ok())
     }
 
     /// `xesam:firstUsed`: When the track was first played.
@@ -195,11 +200,11 @@ impl Metadata {
     }
 
     /// `xesam:trackNumber`: The track number on the album that this track is from.
-    pub fn track_number(&self) -> Option<u64> {
+    pub fn track_number(&self) -> Option<u32> {
         self.inner
             .get(FIELD_TRACK_NUMBER)
             .cloned()
-            .and_then(|v| v.try_into().ok())
+            .and_then(|v| try_value_into_integer(v).ok())
     }
 
     /// `xesam:url`: The location of the media file.
@@ -211,11 +216,11 @@ impl Metadata {
     }
 
     /// `xesam:useCount`: The number of times the track has been played.
-    pub fn play_count(&self) -> Option<u64> {
+    pub fn play_count(&self) -> Option<u32> {
         self.inner
             .get(FIELD_USE_COUNT)
             .cloned()
-            .and_then(|v| v.try_into().ok())
+            .and_then(|v| try_value_into_integer(v).ok())
     }
 
     /// `xesam:userRating`: The user's rating of the track.
@@ -307,6 +312,32 @@ impl TryFrom<OwnedValue> for Metadata {
         Ok(Self {
             inner: value.clone().try_into()?,
         })
+    }
+}
+
+/// There is no clear consensus what an "Integer" in the Xesam properties is.
+/// But most projects seemt to use [i32] (`i`).
+/// This also aligns with the `track_length` being differentiated as a "64-bit integer".
+/// For maximum compatiblity we parse all possible integer types into a [u32].
+///
+/// A [u32] (or rather `u31`, if we ignore the signed part) is big enough to hold all sensible values.
+///
+/// * `bpm`/`track_number`/`disc_number` are comparitively small.
+/// * `use_count` could outgrow a [u16] if someone listens to a track *a lot*, but not a [u32].
+pub fn try_value_into_integer(value: OwnedValue) -> Result<u32> {
+    match *value {
+        Value::U8(v) => Ok(v as u32),
+        Value::Bool(v) => Ok(v as u32),
+        Value::I16(v) => Ok(v as u32),
+        Value::U16(v) => Ok(v as u32),
+        Value::I32(v) => Ok(v as u32),
+        Value::U32(v) => Ok(v),
+        Value::I64(v) => Ok(v as u32),
+        Value::U64(v) => Ok(v as u32),
+        _ => Err(Error::IncorrectValue {
+            wanted: "Integer",
+            actual: value,
+        }),
     }
 }
 
@@ -408,6 +439,16 @@ mod test {
     }
 
     #[test]
+    fn new() {
+        let op = ObjectPath::try_from("/hii").unwrap();
+        let metadata = Metadata::new(op);
+        assert_eq!(
+            metadata.track_id(),
+            Some(OwnedObjectPath::try_from("/hii".to_string()).unwrap())
+        );
+    }
+
+    #[test]
     fn get_track_id() {
         let metadata = new_metadata(FIELD_TRACK_ID, ObjectPath::try_from("/hii").unwrap());
         assert_eq!(
@@ -472,7 +513,7 @@ mod test {
 
     #[test]
     fn get_bpm() {
-        let metadata = new_metadata(FIELD_AUDIO_BPM, Value::U64(120));
+        let metadata = new_metadata(FIELD_AUDIO_BPM, Value::I32(120));
         assert_eq!(metadata.bpm(), Some(120));
     }
 
@@ -523,7 +564,7 @@ mod test {
 
     #[test]
     fn get_disc_number() {
-        let metadata = new_metadata(FIELD_DISC_NUMBER, Value::U64(2));
+        let metadata = new_metadata(FIELD_DISC_NUMBER, Value::I32(2));
         assert_eq!(metadata.disc_number(), Some(2));
     }
 
@@ -580,7 +621,7 @@ mod test {
 
     #[test]
     fn get_track_number() {
-        let metadata = new_metadata(FIELD_TRACK_NUMBER, Value::U64(7));
+        let metadata = new_metadata(FIELD_TRACK_NUMBER, Value::I32(7));
         assert_eq!(metadata.track_number(), Some(7));
     }
 
@@ -595,7 +636,7 @@ mod test {
 
     #[test]
     fn get_play_count() {
-        let metadata = new_metadata(FIELD_USE_COUNT, Value::U64(123));
+        let metadata = new_metadata(FIELD_USE_COUNT, Value::I32(123));
         assert_eq!(metadata.play_count(), Some(123));
     }
 
