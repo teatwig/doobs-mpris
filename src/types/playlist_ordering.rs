@@ -113,7 +113,8 @@ impl Visitor<'_> for PlaylistOrderingVisitor {
 
 #[cfg(test)]
 mod test {
-    use zvariant::Value;
+    use zvariant::serialized::Context;
+    use zvariant::{LE, Value, to_bytes};
 
     use super::PlaylistOrdering;
 
@@ -143,5 +144,23 @@ mod test {
         let err = PlaylistOrdering::try_from(v.clone()).unwrap_err();
 
         assert_eq!(zvariant::Error::IncorrectType, err);
+    }
+
+    #[test]
+    fn serialize() {
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes(ctxt, &PlaylistOrdering::ModifiedDate).unwrap();
+        let decoded: &str = encoded.deserialize().unwrap().0;
+
+        assert_eq!(decoded, "Modified");
+    }
+
+    #[test]
+    fn deserialize() {
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes(ctxt, "Modified").unwrap();
+        let decoded: PlaylistOrdering = encoded.deserialize().unwrap().0;
+
+        assert_eq!(decoded, PlaylistOrdering::ModifiedDate);
     }
 }

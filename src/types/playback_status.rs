@@ -81,7 +81,8 @@ impl TryFrom<OwnedValue> for PlaybackStatus {
 
 #[cfg(test)]
 mod test {
-    use zvariant::{OwnedValue, Value};
+    use zvariant::serialized::Context;
+    use zvariant::{LE, OwnedValue, Value, to_bytes};
 
     use super::PlaybackStatus;
 
@@ -126,5 +127,23 @@ mod test {
         let err = PlaybackStatus::try_from(ov).unwrap_err();
 
         assert_eq!(zvariant::Error::IncorrectType, err);
+    }
+
+    #[test]
+    fn serialize() {
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes(ctxt, &PlaybackStatus::Stopped).unwrap();
+        let decoded: &str = encoded.deserialize().unwrap().0;
+
+        assert_eq!(decoded, "Stopped");
+    }
+
+    #[test]
+    fn deserialize() {
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes(ctxt, "Stopped").unwrap();
+        let decoded: PlaybackStatus = encoded.deserialize().unwrap().0;
+
+        assert_eq!(decoded, PlaybackStatus::Stopped);
     }
 }

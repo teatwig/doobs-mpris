@@ -405,7 +405,11 @@ mod test {
     use std::str::FromStr;
 
     use jiff::SignedDuration;
-    use zvariant::{Array, Dict, ObjectPath, OwnedValue, Signature, Value};
+    use zvariant::serialized::Context;
+    use zvariant::{
+        Array, Dict, LE, ObjectPath, OwnedValue, Signature, Value, signature, to_bytes,
+        to_bytes_for_signature,
+    };
 
     use super::*;
 
@@ -646,6 +650,33 @@ mod test {
     fn get_user_rating() {
         let metadata = new_metadata(FIELD_USER_RATING, Value::F64(0.9));
         assert_eq!(metadata.user_rating(), Some(0.9));
+    }
+
+    #[test]
+    fn serialize() {
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes(ctxt, &new_metadata(FIELD_TRACK_NUMBER, 7)).unwrap();
+        let decoded: HashMap<String, OwnedValue> = encoded.deserialize().unwrap().0;
+
+        assert_eq!(
+            decoded.get(FIELD_TRACK_NUMBER).unwrap().deref(),
+            &Value::from(7)
+        );
+    }
+
+    #[test]
+    fn deserialize() {
+        let mut hashmap: HashMap<String, OwnedValue> = HashMap::new();
+        hashmap.insert(FIELD_TRACK_NUMBER.to_string(), OwnedValue::from(7i32));
+
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes_for_signature(ctxt, signature!("a{sv}"), &hashmap).unwrap();
+        let decoded: Metadata = encoded.deserialize().unwrap().0;
+
+        assert_eq!(
+            decoded.get(FIELD_TRACK_NUMBER).unwrap().deref(),
+            &Value::from(7)
+        );
     }
 
     fn new_metadata<'a, K, V>(key: K, value: V) -> Metadata

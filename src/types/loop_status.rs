@@ -81,7 +81,8 @@ impl TryFrom<OwnedValue> for LoopStatus {
 
 #[cfg(test)]
 mod test {
-    use zvariant::{OwnedValue, Value};
+    use zvariant::serialized::Context;
+    use zvariant::{LE, OwnedValue, Value, to_bytes};
 
     use super::LoopStatus;
 
@@ -126,5 +127,23 @@ mod test {
         let err = LoopStatus::try_from(ov).unwrap_err();
 
         assert_eq!(zvariant::Error::IncorrectType, err);
+    }
+
+    #[test]
+    fn serialize() {
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes(ctxt, &LoopStatus::Playlist).unwrap();
+        let decoded: &str = encoded.deserialize().unwrap().0;
+
+        assert_eq!(decoded, "Playlist");
+    }
+
+    #[test]
+    fn deserialize() {
+        let ctxt = Context::new_dbus(LE, 0);
+        let encoded = to_bytes(ctxt, "Playlist").unwrap();
+        let decoded: LoopStatus = encoded.deserialize().unwrap().0;
+
+        assert_eq!(decoded, LoopStatus::Playlist);
     }
 }
