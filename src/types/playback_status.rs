@@ -6,6 +6,7 @@ use zvariant::{OwnedValue, Type, Value};
 
 use crate::{Error, Result};
 
+/// A playback state.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PlaybackStatus {
     /// A track is currently playing.

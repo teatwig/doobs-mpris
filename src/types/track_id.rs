@@ -11,7 +11,13 @@ use zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Type, Value};
 pub const TRACK_ID_NO_TRACK: ObjectPath =
     ObjectPath::from_static_str_unchecked("/org/mpris/MediaPlayer2/TrackList/NoTrack");
 
-/// A reference to an MPRIS track.
+/// Unique track identifier.
+///
+/// If the media player implements the TrackList interface and allows the same track to appear multiple times in the tracklist, this must be unique within the scope of the tracklist.
+///
+/// Note that this should be a valid D-Bus object id, although clients should not assume that any object is actually exported with any interfaces at that path.
+///
+/// Media players may not use any paths starting with /org/mpris unless explicitly allowed by this specification. Such paths are intended to have special meaning, such as /org/mpris/MediaPlayer2/TrackList/NoTrack to indicate "no track".
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Serialize, Deserialize, Value)]
 pub struct TrackId(OwnedObjectPath);
 

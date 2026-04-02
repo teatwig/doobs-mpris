@@ -6,13 +6,14 @@ use zvariant::{OwnedValue, Type, Value};
 
 use crate::{Error, Result};
 
+/// A repeat / loop status
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum LoopStatus {
-    /// The playback will stop when there are no more tracks to play
+    /// The playback will stop when there are no more tracks to play.
     None,
-    /// The current track will start again from the begining once it has finished playing
+    /// The current track will start again from the begining once it has finished playing.
     Track,
-    /// The playback loops through a list of tracks
+    /// The playback loops through a list of tracks.
     Playlist,
 }
 
