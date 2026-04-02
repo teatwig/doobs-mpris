@@ -1,6 +1,11 @@
 # doobs-mpris
 
-This crate provides [zbus](github.com/z-galaxy/zbus/) bindings for [org.mpris.MediaPlayer2](https://mpris2.readthedocs.io/en/latest/).
+[![Crates.io Version](https://img.shields.io/crates/v/doobs-mpris)](https://crates.io/crates/doobs-mpris)
+[![API Documentation](https://docs.rs/doobs-mpris/badge.svg)](https://docs.rs/doobs-mpris)
+[![License](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
+[![CI](https://github.com/teatwig/doobs-mpris/actions/workflows/ci.yaml/badge.svg)](https://github.com/teatwig/doobs-mpris/actions/workflows/ci.yaml)
+
+This crate provides [zbus](github.com/z-galaxy/zbus/) bindings for the [MPRIS D-Bus Interface Specification](https://specifications.freedesktop.org/mpris/latest/).
 
 It can be used to connect to and discover existing media players that implement the MPRIS specification, as well as adding MPRIS-support to your own media player.
 
