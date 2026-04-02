@@ -6,13 +6,15 @@ use zbus::Connection;
 use zbus::fdo::DBusProxy;
 use zbus::names::OwnedBusName;
 
+use crate::binding::MPRIS_BUS_NAME_PREFIX;
+
 #[derive(Clone, Debug)]
 pub enum Event {
     Remove(OwnedBusName),
     Add(OwnedBusName),
 }
 
-/// Helper to list mpris players on DBus bus, and watch for addition/removal.
+/// Helper to list MPRIS players on D-Bus bus, and watch for addition/removal.
 ///
 /// Uses `org.freedesktop.DBus` to watch for clients that claim names starting with
 /// `org.mpris.MediaPlayer2.`
@@ -30,7 +32,7 @@ impl Enumerator {
         })
     }
 
-    /// Returns a stream that is signalled when an mpris client is added or removed
+    /// Returns a stream that is signalled when an MPRIS client is added or removed
     pub async fn receive_changes(
         &self,
     ) -> zbus::Result<impl Stream<Item = zbus::Result<Event>> + Unpin + use<>> {
@@ -44,7 +46,7 @@ impl Enumerator {
                             return Some(stream::iter(Some(Err(err)).into_iter().chain(None)));
                         }
                     };
-                    if args.name().contains("org.mpris.MediaPlayer2.") {
+                    if args.name().starts_with(MPRIS_BUS_NAME_PREFIX) {
                         let remove = args
                             .old_owner
                             .as_ref()
@@ -62,10 +64,10 @@ impl Enumerator {
             .flatten())
     }
 
-    /// Get names of all mpris players currently on the bus
+    /// Get names of all MPRIS players currently on the bus
     pub async fn players(&self) -> zbus::Result<Vec<OwnedBusName>> {
         let mut players = self.proxy.list_names().await?;
-        players.retain(|name| name.starts_with("org.mpris.MediaPlayer2."));
+        players.retain(|name| name.starts_with(MPRIS_BUS_NAME_PREFIX));
         Ok(players)
     }
 }

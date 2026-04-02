@@ -62,7 +62,7 @@ impl TrackList {
         self.proxy.remove_track(track).await.map_err(Error::from)
     }
 
-    /// Returns a list of all available [Track]s.
+    /// Returns a list of all available [TrackId]s.
     pub async fn tracks(&self) -> Result<Vec<TrackId>> {
         self.proxy
             .tracks()
@@ -71,7 +71,7 @@ impl TrackList {
             .map_err(Error::from)
     }
 
-    /// Returns a list of all available [Track]s and their associated metadata,
+    /// Returns a list of all available [TrackId]s and their associated metadata,
     /// in order.
     pub async fn detailed_tracks(&self) -> Result<BTreeMap<TrackId, Metadata>> {
         let tracks = self.tracks().await?;

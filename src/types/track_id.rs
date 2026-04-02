@@ -4,7 +4,12 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
-use zvariant::{ObjectPath, OwnedObjectPath, Type, Value};
+use zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Type, Value};
+
+/// This path indicates "no track" when returned as the current Track ID,
+/// or the start of a playlist when inserting into one.
+pub const TRACK_ID_NO_TRACK: ObjectPath =
+    ObjectPath::from_static_str_unchecked("/org/mpris/MediaPlayer2/TrackList/NoTrack");
 
 /// A reference to an MPRIS track.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Serialize, Deserialize, Value)]
@@ -34,6 +39,12 @@ impl<'a> AsRef<ObjectPath<'a>> for TrackId {
     }
 }
 
+impl PartialEq<ObjectPath<'_>> for TrackId {
+    fn eq(&self, other: &ObjectPath) -> bool {
+        self.as_ref() == other
+    }
+}
+
 impl PartialOrd for TrackId {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -49,5 +60,59 @@ impl Ord for TrackId {
 impl Display for TrackId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0.as_str())
+    }
+}
+
+impl From<TrackId> for OwnedValue {
+    fn from(value: TrackId) -> Self {
+        value.into_static_path().into()
+    }
+}
+
+impl From<ObjectPath<'_>> for TrackId {
+    fn from(value: ObjectPath) -> Self {
+        Self(value.into())
+    }
+}
+
+impl From<OwnedObjectPath> for TrackId {
+    fn from(value: OwnedObjectPath) -> Self {
+        Self(value)
+    }
+}
+
+impl TryFrom<OwnedValue> for TrackId {
+    type Error = zvariant::Error;
+
+    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+        let oop: OwnedObjectPath = value.try_into()?;
+        Ok(Self(oop))
+    }
+}
+
+impl TryFrom<&str> for TrackId {
+    type Error = zvariant::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let oop: OwnedObjectPath = value.try_into()?;
+        Ok(Self(oop))
+    }
+}
+
+impl TryFrom<String> for TrackId {
+    type Error = zvariant::Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        value.as_str().try_into()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{TRACK_ID_NO_TRACK, TrackId};
+
+    #[test]
+    fn eq() {
+        assert_eq!(TrackId::from(TRACK_ID_NO_TRACK), TRACK_ID_NO_TRACK);
     }
 }

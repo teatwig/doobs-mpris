@@ -5,8 +5,9 @@ use std::ops::{Deref, DerefMut};
 
 use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
-use zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Type, Value};
+use zvariant::{OwnedValue, Type, Value};
 
+use crate::types::TrackId;
 use crate::{Error, Result};
 
 // list of metadata properties, see: https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/
@@ -70,7 +71,7 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    pub fn new(track_id: ObjectPath) -> Self {
+    pub fn new(track_id: TrackId) -> Self {
         let mut metadata = Self {
             inner: HashMap::new(),
         };
@@ -232,11 +233,11 @@ impl Metadata {
     }
 
     /// `mpris:trackid`: D-Bus path: A unique identity for this track within the context of an MPRIS object (eg: tracklist).
-    pub fn track_id(&self) -> Option<OwnedObjectPath> {
+    pub fn track_id(&self) -> Option<TrackId> {
         self.inner
             .get(FIELD_TRACK_ID)
             .cloned()
-            .and_then(|path| OwnedObjectPath::try_from(path).ok())
+            .and_then(|path| TrackId::try_from(path).ok())
     }
 
     /// `mpris:length`: The length of the track in microseconds.
@@ -315,16 +316,17 @@ impl TryFrom<OwnedValue> for Metadata {
     }
 }
 
-/// There is no clear consensus what an "Integer" in the Xesam properties is.
-/// But most projects seemt to use [i32] (`i`).
-/// This also aligns with the `track_length` being differentiated as a "64-bit integer".
-/// For maximum compatiblity we parse all possible integer types into a [u32].
-///
-/// A [u32] (or rather `u31`, if we ignore the signed part) is big enough to hold all sensible values.
-///
-/// * `bpm`/`track_number`/`disc_number` are comparitively small.
-/// * `use_count` could outgrow a [u16] if someone listens to a track *a lot*, but not a [u32].
+/// Tries to convert the given value into an Integer.
 pub fn try_value_into_integer(value: OwnedValue) -> Result<u32> {
+    // There is no clear consensus what an "Integer" in the Xesam properties is.
+    // But most projects seemt to use i32 (`i`).
+    // This also aligns with the `track_length` being differentiated as a "64-bit integer".
+    // For maximum compatiblity we parse all possible integer types into a u32.
+    //
+    // A u32 (or rather u31, if we ignore the signed part) is big enough to hold all sensible values.
+    //
+    // * `bpm`/`track_number`/`disc_number` are comparitively small.
+    // * `use_count` could outgrow a u16 if someone listens to a track *a lot*, but not a u32.
     match *value {
         Value::U8(v) => Ok(v as u32),
         Value::Bool(v) => Ok(v as u32),
@@ -403,7 +405,7 @@ mod test {
     use std::str::FromStr;
 
     use jiff::SignedDuration;
-    use zvariant::{Array, Dict, ObjectPath, OwnedObjectPath, OwnedValue, Signature, Value};
+    use zvariant::{Array, Dict, ObjectPath, OwnedValue, Signature, Value};
 
     use super::*;
 
@@ -440,11 +442,11 @@ mod test {
 
     #[test]
     fn new() {
-        let op = ObjectPath::try_from("/hii").unwrap();
+        let op = TrackId::try_from("/hii").unwrap();
         let metadata = Metadata::new(op);
         assert_eq!(
             metadata.track_id(),
-            Some(OwnedObjectPath::try_from("/hii".to_string()).unwrap())
+            Some(TrackId::try_from("/hii").unwrap())
         );
     }
 
@@ -453,7 +455,7 @@ mod test {
         let metadata = new_metadata(FIELD_TRACK_ID, ObjectPath::try_from("/hii").unwrap());
         assert_eq!(
             metadata.track_id(),
-            Some(OwnedObjectPath::try_from("/hii".to_string()).unwrap())
+            Some(TrackId::try_from("/hii").unwrap())
         );
     }
 

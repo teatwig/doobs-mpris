@@ -13,3 +13,20 @@ pub use playlists::*;
 
 mod track_list;
 pub use track_list::*;
+use zbus::names::OwnedWellKnownName;
+
+/// All D-Bus connections implementing the MPRIS specification *must* request a unique bus name
+/// starting with this prefix.
+pub const MPRIS_BUS_NAME_PREFIX: &str = "org.mpris.MediaPlayer2.";
+
+/// D-Bus object path that all MPRIS interfaces should be served at.
+pub const MPRIS_OBJECT_PATH: &str = "/org/mpris/MediaPlayer2";
+
+/// Creates a new bus name that is prefixed with the [MPRIS_BUS_NAME_PREFIX].
+///
+/// This allows clients like [Enumerator] to list available media players.
+///
+/// [Enumerator]: crate::Enumerator
+pub fn create_mpris_bus_name(player_name: &str) -> zbus::names::Result<OwnedWellKnownName> {
+    OwnedWellKnownName::try_from(format!("{MPRIS_BUS_NAME_PREFIX}{player_name}"))
+}

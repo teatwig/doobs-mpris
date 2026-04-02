@@ -215,7 +215,7 @@ pub struct Player<P>(pub P);
 
 #[interface(
     name = "org.mpris.MediaPlayer2.Player",
-    proxy(default_path = "/org/mpris/MediaPlayer2",)
+    proxy(default_path = "/org/mpris/MediaPlayer2")
 )]
 impl<P> Player<P>
 where

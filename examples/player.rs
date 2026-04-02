@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MPL-2.0
-use std::collections::HashMap;
-
-use doobs_mpris::binding::{PlayerProvider, PlayerProxy};
-use doobs_mpris::types::{Metadata, MprisDuration, PlaybackStatus};
+use doobs_mpris::binding::{MPRIS_OBJECT_PATH, PlayerProvider, PlayerProxy, create_mpris_bus_name};
+use doobs_mpris::types::{Metadata, MprisDuration, PlaybackStatus, TrackId};
 use jiff::SignedDuration;
 use miette::{IntoDiagnostic, Result, WrapErr};
 use zbus::Connection;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // the name of our dbus service
+    // the name of the dbus connection for our player
     // it should start with `org.mpris.MediaPlayer2.` in order to be discoverable
     // by the enumerator and tools like playerctl
-    let service_name = "org.mpris.MediaPlayer2.foo";
+    let bus_name = create_mpris_bus_name("foo")
+        .into_diagnostic()
+        .wrap_err("Invalid bus name")?;
 
     // start our Foo player
 
@@ -20,10 +20,10 @@ async fn main() -> Result<()> {
     let _player_iface = zbus::connection::Builder::session()
         .into_diagnostic()
         .wrap_err("Failed to create session D-Bus builder")?
-        .name(service_name)
+        .name(&bus_name)
         .into_diagnostic()
-        .wrap_err_with(|| format!("Failed to register D-Bus service: {service_name}"))?
-        .serve_at("/org/mpris/MediaPlayer2", player)
+        .wrap_err_with(|| format!("Failed to register D-Bus service: {bus_name}"))?
+        .serve_at(MPRIS_OBJECT_PATH, player)
         .into_diagnostic()
         .wrap_err("Failed to serve Foo player on MPRIS path")?
         .build()
@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
         .await
         .into_diagnostic()
         .wrap_err("Failed to establish session D-Bus connection for client")?;
-    let client = PlayerProxy::new(&client_conn, service_name)
+    let client = PlayerProxy::new(&client_conn, bus_name)
         .await
         .into_diagnostic()
         .wrap_err("Failed to create proxy for Foo player")?;
@@ -60,16 +60,14 @@ struct FooPlayerProvider;
 
 impl PlayerProvider for FooPlayerProvider {
     async fn metadata(&self) -> zbus::fdo::Result<Metadata> {
-        let track_id: zvariant::OwnedValue =
-            zvariant::Value::from("/noplaylist").try_into().unwrap();
+        let track_id = TrackId::try_from("/noplaylist").unwrap();
         let title: zvariant::OwnedValue = zvariant::Value::from("A Really Cool Song")
             .try_into()
             .unwrap();
 
-        let mut metadata = HashMap::new();
-        metadata.insert("mpris:trackid".to_string(), track_id); // trackid is required
+        let mut metadata = Metadata::new(track_id);
         metadata.insert("xesam:title".to_string(), title);
-        Ok(metadata.into())
+        Ok(metadata)
     }
 
     async fn playback_status(&self) -> zbus::fdo::Result<PlaybackStatus> {
