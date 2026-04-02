@@ -1,8 +1,15 @@
 # doobs-mpris
 
-A zbus proxy and interface for [org.mpris.MediaPlayer2](https://mpris2.readthedocs.io/en/latest/).
+This crate provides [zbus](github.com/z-galaxy/zbus/) bindings for [org.mpris.MediaPlayer2](https://mpris2.readthedocs.io/en/latest/).
 
-This is based on the [MPRIS bindings from Pop!_OS](https://github.com/pop-os/dbus-settings-bindings/tree/main/mpris2).
+It can be used to connect to and discover existing media players that implement the MPRIS specification, as well as adding MPRIS-support to your own media player.
+
+The main goal is to make working with MPRIS as simple as possible by providing custom types and default implementations:
+
+* LoopStatus, PlaybackStatus and PlaylistOrdering are exposed as enums instead of strings
+* durations (playback position and seeked amount) are exposed as `SignedDuration`s instead of microseconds, so you can easily convert them to and from your desired type
+* instead of directly implementing the zbus interfaces there is a `Provider` trait for each D-Bus interface
+  * these contain default implementations for all D-Bus methods and properties that aren't necessary for a read-only media player to make it easy to get started quickly
 
 ## Connecting to an existing player
 
@@ -17,6 +24,10 @@ There are also [examples](./examples/) for automatically discovering players.
 ## Creating a new player
 
 See the [player example](./examples/player.rs).
+
+## Acknowledgements
+
+This started as a fork of the [MPRIS bindings from Pop!_OS](https://github.com/pop-os/dbus-settings-bindings/tree/main/mpris2).
 
 ## License
 
