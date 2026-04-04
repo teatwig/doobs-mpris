@@ -5,7 +5,9 @@
 [![License](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
 [![CI](https://github.com/teatwig/doobs-mpris/actions/workflows/ci.yaml/badge.svg)](https://github.com/teatwig/doobs-mpris/actions/workflows/ci.yaml)
 
-This crate provides [zbus](github.com/z-galaxy/zbus/) bindings for the [MPRIS D-Bus Interface Specification](https://specifications.freedesktop.org/mpris/latest/).
+<!-- cargo-rdme start -->
+
+This crate provides [zbus](https://github.com/z-galaxy/zbus/) bindings for the [MPRIS D-Bus Interface Specification](https://specifications.freedesktop.org/mpris/latest/).
 
 It can be used to connect to and discover existing media players that implement the MPRIS specification, as well as adding MPRIS-support to your own media player.
 
@@ -24,11 +26,13 @@ let proxy = PlayerProxy::new(&conn, "org.mpris.MediaPlayer2.some_mpris_player").
 proxy.play_pause().await?;
 ```
 
-There are also [examples](./examples/) for automatically discovering players.
+There are also [examples](https://github.com/teatwig/doobs-mpris/tree/main/examples/) for automatically discovering players.
 
 ## Creating a new player
 
-See the [player example](./examples/player.rs).
+See the [player example](https://github.com/teatwig/doobs-mpris/tree/main/examples/player.rs).
+
+<!-- cargo-rdme end -->
 
 ## Acknowledgements
 
