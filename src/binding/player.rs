@@ -280,8 +280,28 @@ pub trait PlayerProvider {
 
 /// D-Bus interface for an MPRIS player.
 ///
-/// It delegates the D-Bus calls to the given [PlayerProvider].
-pub struct Player<P>(pub P);
+/// It delegates the D-Bus calls to its provider.
+pub struct Player<P>(P);
+
+impl<P> Player<P>
+where
+    P: PlayerProvider + Send + Sync + 'static,
+{
+    /// Creates a new MPRIS player that delegates to the given [PlayerProvider].
+    pub fn new(provider: P) -> Self {
+        Self(provider)
+    }
+
+    /// The reference to the underlying [PlayerProvider].
+    pub fn inner(&self) -> &P {
+        &self.0
+    }
+
+    /// The mutable reference to the underlying [PlayerProvider].
+    pub fn inner_mut(&mut self) -> &mut P {
+        &mut self.0
+    }
+}
 
 #[interface(
     name = "org.mpris.MediaPlayer2.Player",

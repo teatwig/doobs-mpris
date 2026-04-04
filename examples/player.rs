@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
 
     // start our Foo player
 
-    let player = doobs_mpris::binding::Player(FooPlayerProvider);
+    let player = doobs_mpris::binding::Player::new(FooPlayerProvider);
     let _player_iface = zbus::connection::Builder::session()
         .into_diagnostic()
         .wrap_err("Failed to create session D-Bus builder")?

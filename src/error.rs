@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+/// The error type for [doobs_mpris][crate].
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// Invalid enum variant when converting from String.
@@ -9,6 +10,7 @@ pub enum Error {
         expected: &'static [&'static str],
     },
 
+    /// Incorrect value when converting from zvariant.
     #[error("Tried to convert Value::{wanted}, but it was {actual:?}")]
     IncorrectValue {
         wanted: &'static str,
@@ -51,4 +53,5 @@ impl From<Error> for zvariant::Error {
     }
 }
 
+/// Alias for [Result][std::result::Result] with the error type [doobs_mpris::Error][crate::Error].
 pub type Result<T> = std::result::Result<T, Error>;

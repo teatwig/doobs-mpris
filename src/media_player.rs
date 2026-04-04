@@ -7,6 +7,7 @@ use zbus::names::OwnedBusName;
 use crate::binding::{MediaPlayer2Proxy, PlayerProxy, PlaylistsProxy, TrackListProxy};
 use crate::{Enumerator, Error, Player, Playlists, Result, TrackList};
 
+/// Simplified access MPRIS media players.
 #[derive(Debug, Clone)]
 pub struct MediaPlayer {
     proxy: MediaPlayer2Proxy<'static>,

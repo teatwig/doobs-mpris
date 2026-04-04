@@ -8,6 +8,7 @@ use crate::binding::{MediaPlayer2Proxy, PlayerProxy};
 use crate::types::{LoopStatus, Metadata, MprisDuration, PlaybackStatus, TrackId};
 use crate::{Error, MediaPlayer, Result, handle_optional};
 
+/// Simplified access to the controls of an MPRIS media player.
 #[derive(Debug, Clone)]
 pub struct Player {
     proxy: PlayerProxy<'static>,

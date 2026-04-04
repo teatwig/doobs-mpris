@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! This module contains everything that can act as a dbus type.
+//! Types that can be used as zbus values.
 
 mod duration;
 pub use duration::*;

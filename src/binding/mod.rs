@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Bindings for all the MPRIS interfaces (Version 2.2).
+//! Bindings for all the MPRIS 2.2 interfaces.
 //!
 //! Parts of the documentation were adapted from the
 //! [MPRIS D-Bus Interface Specification][mpris-spec],

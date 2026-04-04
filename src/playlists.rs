@@ -7,6 +7,7 @@ use zbus::names::OwnedBusName;
 use crate::binding::PlaylistsProxy;
 use crate::{Error, Result};
 
+/// Simplified access to the playlists of an MPRIS media player.
 pub struct Playlists {
     proxy: PlaylistsProxy<'static>,
 }

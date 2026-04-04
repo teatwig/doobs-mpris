@@ -9,6 +9,7 @@ use crate::binding::TrackListProxy;
 use crate::types::{Metadata, TrackId};
 use crate::{Error, Result};
 
+/// Simplified access to the track list of an MPRIS media player.
 #[derive(Debug, Clone)]
 pub struct TrackList {
     proxy: TrackListProxy<'static>,
