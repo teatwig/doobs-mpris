@@ -32,7 +32,7 @@ impl TrackList {
     pub async fn add_track<S: ToString>(
         &self,
         uri: S,
-        after: &TrackId,
+        after: TrackId,
         set_as_current: bool,
     ) -> Result<()> {
         let uri = uri.to_string();
@@ -54,12 +54,12 @@ impl TrackList {
     }
 
     /// Goes to the specified track.
-    pub async fn go_to(&self, track: &TrackId) -> Result<()> {
+    pub async fn go_to(&self, track: TrackId) -> Result<()> {
         self.proxy.go_to(track).await.map_err(Error::from)
     }
 
     /// Removes the specified track.
-    pub async fn remove(&self, track: &TrackId) -> Result<()> {
+    pub async fn remove(&self, track: TrackId) -> Result<()> {
         self.proxy.remove_track(track).await.map_err(Error::from)
     }
 
