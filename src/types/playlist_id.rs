@@ -4,9 +4,9 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
-use zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Type, Value};
+use zbus::{ObjectPath, OwnedObjectPath, OwnedVariant, Type, Variant};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Serialize, Deserialize, Value)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Serialize, Deserialize, Variant)]
 pub struct PlaylistId(OwnedObjectPath);
 
 impl PlaylistId {
@@ -51,7 +51,7 @@ impl Display for PlaylistId {
     }
 }
 
-impl From<PlaylistId> for OwnedValue {
+impl From<PlaylistId> for OwnedVariant {
     fn from(value: PlaylistId) -> Self {
         value.into_inner().into_inner().into()
     }
@@ -63,17 +63,17 @@ impl From<OwnedObjectPath> for PlaylistId {
     }
 }
 
-impl TryFrom<OwnedValue> for PlaylistId {
-    type Error = zvariant::Error;
+impl TryFrom<OwnedVariant> for PlaylistId {
+    type Error = zbus::Error;
 
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+    fn try_from(value: OwnedVariant) -> Result<Self, Self::Error> {
         let oop: OwnedObjectPath = value.try_into()?;
         Ok(Self(oop))
     }
 }
 
 impl TryFrom<&str> for PlaylistId {
-    type Error = zvariant::Error;
+    type Error = zbus::Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let oop: OwnedObjectPath = value.try_into()?;
@@ -82,7 +82,7 @@ impl TryFrom<&str> for PlaylistId {
 }
 
 impl TryFrom<String> for PlaylistId {
-    type Error = zvariant::Error;
+    type Error = zbus::Error;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         value.as_str().try_into()

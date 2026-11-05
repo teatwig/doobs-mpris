@@ -17,7 +17,7 @@ impl MediaPlayer {
     /// Creates a new instance of the `org.mpris.MediaPlayer2` interface.
     pub async fn new(connection: &Connection, name: OwnedBusName) -> Result<Self> {
         MediaPlayer2Proxy::builder(connection)
-            .destination(name)?
+            .destination(name)
             .build()
             .await
             .map(Self::from)
@@ -42,7 +42,7 @@ impl MediaPlayer {
     /// Returns an instance to the `org.mpris.MediaPlayer2.Player` interface of this object.
     pub async fn player(&self) -> Result<Player> {
         PlayerProxy::builder(self.proxy.inner().connection())
-            .destination(self.proxy.inner().destination().to_owned())?
+            .destination(self.proxy.inner().destination().to_owned())
             .build()
             .await
             .map(Player::from)
@@ -54,7 +54,7 @@ impl MediaPlayer {
     pub async fn track_list(&self) -> Result<Option<TrackList>> {
         if self.proxy.has_track_list().await? {
             TrackListProxy::builder(self.proxy.inner().connection())
-                .destination(self.proxy.inner().destination().to_owned())?
+                .destination(self.proxy.inner().destination().to_owned())
                 .build()
                 .await
                 .map(TrackList::from)
@@ -70,7 +70,7 @@ impl MediaPlayer {
     pub async fn playlists(&self) -> Result<Option<Playlists>> {
         if self.proxy.has_track_list().await? {
             PlaylistsProxy::builder(self.proxy.inner().connection())
-                .destination(self.proxy.inner().destination().to_owned())?
+                .destination(self.proxy.inner().destination().to_owned())
                 .build()
                 .await
                 .map(Playlists::from)

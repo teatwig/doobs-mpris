@@ -11,10 +11,10 @@ pub enum Error {
     },
 
     /// Incorrect value when converting from zvariant.
-    #[error("Tried to convert Value::{wanted}, but it was {actual:?}")]
-    IncorrectValue {
+    #[error("Tried to convert Variant::{wanted}, but it was {actual:?}")]
+    IncorrectVariant {
         wanted: &'static str,
-        actual: zvariant::OwnedValue,
+        actual: zbus::OwnedVariant,
     },
 
     #[error("Failed to parse as a timestamp")]
@@ -47,9 +47,9 @@ impl From<zbus::Error> for Error {
     }
 }
 
-impl From<Error> for zvariant::Error {
+impl From<Error> for zbus::Error {
     fn from(err: Error) -> Self {
-        Self::Message(err.to_string())
+        Self::Failure(err.to_string())
     }
 }
 

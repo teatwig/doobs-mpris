@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
-use zvariant::{OwnedValue, Type, Value};
+use zbus::{OwnedVariant, Type, Variant};
 
 use crate::{Error, Result};
 
@@ -50,29 +50,29 @@ impl Display for LoopStatus {
 // traits necessary to use it as a type in zbus
 
 impl Type for LoopStatus {
-    const SIGNATURE: &'static zvariant::Signature = &zvariant::Signature::Str;
+    const SIGNATURE: &'static zbus::Signature = &zbus::Signature::Str;
 }
 
-impl From<LoopStatus> for Value<'_> {
+impl From<LoopStatus> for Variant<'_> {
     fn from(value: LoopStatus) -> Self {
-        Value::from(value.to_string())
+        Variant::from(value.to_string())
     }
 }
 
-impl TryFrom<Value<'_>> for LoopStatus {
-    type Error = zvariant::Error;
+impl TryFrom<Variant<'_>> for LoopStatus {
+    type Error = zbus::Error;
 
-    fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Variant) -> std::result::Result<Self, Self::Error> {
         let value = value.downcast_ref::<&str>()?;
         let value = LoopStatus::from_str(value)?;
         Ok(value)
     }
 }
 
-impl TryFrom<OwnedValue> for LoopStatus {
-    type Error = zvariant::Error;
+impl TryFrom<OwnedVariant> for LoopStatus {
+    type Error = zbus::Error;
 
-    fn try_from(value: OwnedValue) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: OwnedVariant) -> std::result::Result<Self, Self::Error> {
         let value = value.downcast_ref::<&str>()?;
         let value = LoopStatus::from_str(value)?;
         Ok(value)
@@ -81,8 +81,9 @@ impl TryFrom<OwnedValue> for LoopStatus {
 
 #[cfg(test)]
 mod test {
-    use zvariant::serialized::Context;
-    use zvariant::{LE, OwnedValue, Value, to_bytes};
+    use zbus::wire::serialized::Context;
+    use zbus::wire::{LE, to_bytes};
+    use zbus::{OwnedVariant, Variant};
 
     use super::LoopStatus;
 
@@ -91,13 +92,13 @@ mod test {
         let expected = LoopStatus::Track;
 
         // lowercase string works
-        let v = Value::Str("track".into());
+        let v = Variant::Str("track".into());
         let status = LoopStatus::try_from(v.clone()).unwrap();
 
         assert_eq!(status, expected);
-        assert_eq!(Value::Str("Track".into()), Value::from(expected));
+        assert_eq!(Variant::Str("Track".into()), Variant::from(expected));
 
-        let ov = OwnedValue::try_from(v.clone()).unwrap();
+        let ov = OwnedVariant::try_from(v.clone()).unwrap();
         let duration = LoopStatus::try_from(ov.clone()).unwrap();
 
         assert_eq!(duration, expected);
@@ -105,33 +106,33 @@ mod test {
 
     #[test]
     fn wrong_enum_type() {
-        let v = Value::Str("unknown".into());
+        let v = Variant::Str("unknown".into());
         let err = LoopStatus::try_from(v.clone()).unwrap_err();
 
-        assert!(matches!(err, zvariant::Error::Message(_)));
+        assert!(matches!(err, zbus::Error::Failure(_)));
 
-        let ov = OwnedValue::try_from(v).unwrap();
+        let ov = OwnedVariant::try_from(v).unwrap();
         let err = LoopStatus::try_from(ov).unwrap_err();
 
-        assert!(matches!(err, zvariant::Error::Message(_)));
+        assert!(matches!(err, zbus::Error::Failure(_)));
     }
 
     #[test]
     fn wrong_dbus_type() {
-        let v = Value::U64(5);
+        let v = Variant::U64(5);
         let err = LoopStatus::try_from(v.clone()).unwrap_err();
 
-        assert_eq!(zvariant::Error::IncorrectType, err);
+        assert_eq!(zbus::Error::IncorrectType, err);
 
-        let ov = OwnedValue::try_from(v).unwrap();
+        let ov = OwnedVariant::try_from(v).unwrap();
         let err = LoopStatus::try_from(ov).unwrap_err();
 
-        assert_eq!(zvariant::Error::IncorrectType, err);
+        assert_eq!(zbus::Error::IncorrectType, err);
     }
 
     #[test]
     fn serialize() {
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes(ctxt, &LoopStatus::Playlist).unwrap();
         let decoded: &str = encoded.deserialize().unwrap().0;
 
@@ -140,7 +141,7 @@ mod test {
 
     #[test]
     fn deserialize() {
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes(ctxt, "Playlist").unwrap();
         let decoded: LoopStatus = encoded.deserialize().unwrap().0;
 

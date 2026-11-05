@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use jiff::SignedDuration;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use zvariant::{OwnedValue, Type, Value};
+use zbus::{OwnedVariant, Type, Variant};
 
 /// Simple wrapper around [jiff::SignedDuration] to allow using it as a zbus type.
 #[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -51,34 +51,34 @@ impl From<MprisDuration> for SignedDuration {
 // traits necessary to use it as a type in zbus
 
 impl Type for MprisDuration {
-    const SIGNATURE: &'static zvariant::Signature = &zvariant::Signature::I64;
+    const SIGNATURE: &'static zbus::Signature = &zbus::Signature::I64;
 }
 
-impl From<MprisDuration> for Value<'_> {
+impl From<MprisDuration> for Variant<'_> {
     fn from(value: MprisDuration) -> Self {
-        Value::from(value.as_micros_i64())
+        Variant::from(value.as_micros_i64())
     }
 }
 
-impl TryFrom<Value<'_>> for MprisDuration {
-    type Error = zvariant::Error;
+impl TryFrom<Variant<'_>> for MprisDuration {
+    type Error = zbus::Error;
 
-    fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: Variant) -> std::result::Result<Self, Self::Error> {
         let micros: i64 = value.try_into()?;
         Ok(MprisDuration::from_micros(micros))
     }
 }
 
-impl From<MprisDuration> for OwnedValue {
+impl From<MprisDuration> for OwnedVariant {
     fn from(value: MprisDuration) -> Self {
-        OwnedValue::from(value.as_micros_i64())
+        OwnedVariant::from(value.as_micros_i64())
     }
 }
 
-impl TryFrom<OwnedValue> for MprisDuration {
-    type Error = zvariant::Error;
+impl TryFrom<OwnedVariant> for MprisDuration {
+    type Error = zbus::Error;
 
-    fn try_from(value: OwnedValue) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: OwnedVariant) -> std::result::Result<Self, Self::Error> {
         let micros: i64 = value.try_into()?;
         Ok(MprisDuration::from_micros(micros))
     }
@@ -109,8 +109,9 @@ impl<'de> Deserialize<'de> for MprisDuration {
 #[cfg(test)]
 mod test {
     use jiff::SignedDuration;
-    use zvariant::serialized::Context;
-    use zvariant::{LE, OwnedValue, Value, to_bytes};
+    use zbus::wire::serialized::Context;
+    use zbus::wire::{LE, to_bytes};
+    use zbus::{OwnedVariant, Variant};
 
     use super::MprisDuration;
 
@@ -118,54 +119,54 @@ mod test {
     fn success_from_pos_i64() {
         let expected = SignedDuration::from_secs(42).into();
 
-        let v = Value::I64(42 * 1000 * 1000);
+        let v = Variant::I64(42 * 1000 * 1000);
         let duration = MprisDuration::try_from(v.clone()).unwrap();
 
         assert_eq!(duration, expected);
-        assert_eq!(v, Value::from(expected));
+        assert_eq!(v, Variant::from(expected));
 
-        let ov = OwnedValue::try_from(v.clone()).unwrap();
+        let ov = OwnedVariant::try_from(v.clone()).unwrap();
         let duration = MprisDuration::try_from(ov.clone()).unwrap();
 
         assert_eq!(duration, expected);
-        assert_eq!(ov, OwnedValue::from(expected));
+        assert_eq!(ov, OwnedVariant::from(expected));
     }
 
     #[test]
     fn success_from_neg_i64() {
         let expected = SignedDuration::from_secs(-15).into();
 
-        let v = Value::I64(-15 * 1000 * 1000);
+        let v = Variant::I64(-15 * 1000 * 1000);
         let duration = MprisDuration::try_from(v.clone()).unwrap();
 
         assert_eq!(duration, expected);
-        assert_eq!(v, Value::from(expected));
+        assert_eq!(v, Variant::from(expected));
 
-        let ov = OwnedValue::try_from(v).unwrap();
+        let ov = OwnedVariant::try_from(v).unwrap();
         let duration = MprisDuration::try_from(ov.clone()).unwrap();
 
         assert_eq!(duration, expected);
-        assert_eq!(ov, OwnedValue::from(expected));
+        assert_eq!(ov, OwnedVariant::from(expected));
     }
 
     #[test]
     fn wrong_dbus_type() {
-        let v = Value::U64(5);
+        let v = Variant::U64(5);
         let err = MprisDuration::try_from(v.clone()).unwrap_err();
 
-        assert_eq!(zvariant::Error::IncorrectType, err);
+        assert_eq!(zbus::Error::IncorrectType, err);
 
-        let ov = OwnedValue::try_from(v).unwrap();
+        let ov = OwnedVariant::try_from(v).unwrap();
         let err = MprisDuration::try_from(ov).unwrap_err();
 
-        assert_eq!(zvariant::Error::IncorrectType, err);
+        assert_eq!(zbus::Error::IncorrectType, err);
     }
 
     #[test]
     fn serialize() {
         let expected = 60 * 1000 * 1000;
 
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes(ctxt, &MprisDuration::from_micros(expected)).unwrap();
         let decoded: i64 = encoded.deserialize().unwrap().0;
 
@@ -176,7 +177,7 @@ mod test {
     fn deserialize() {
         let expected = 60 * 1000 * 1000;
 
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes(ctxt, &expected).unwrap();
         let decoded: MprisDuration = encoded.deserialize().unwrap().0;
 

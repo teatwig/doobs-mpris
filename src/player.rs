@@ -19,7 +19,7 @@ impl Player {
     // TODO this being an OwnedBusName makes it really annoying to create a player
     pub async fn new(connection: &Connection, name: OwnedBusName) -> Result<Self> {
         PlayerProxy::builder(connection)
-            .destination(name)?
+            .destination(name)
             .build()
             .await
             .map(Self::from)
@@ -29,7 +29,7 @@ impl Player {
     /// Returns this player's `org.mpris.MediaPlayer2` instance
     pub async fn media_player(&self) -> Result<MediaPlayer> {
         let proxy = MediaPlayer2Proxy::builder(self.proxy.inner().connection())
-            .destination(self.proxy.inner().destination().to_owned())?
+            .destination(self.proxy.inner().destination().to_owned())
             .build()
             .await?;
         Ok(proxy.into())

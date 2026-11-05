@@ -31,6 +31,6 @@ pub const MPRIS_OBJECT_PATH: &str = "/org/mpris/MediaPlayer2";
 /// Creates a new bus name that is prefixed with the [MPRIS_BUS_NAME_PREFIX].
 ///
 /// This allows clients like [Enumerator](crate::Enumerator) to list available media players.
-pub fn create_mpris_bus_name(player_name: &str) -> zbus::names::Result<OwnedWellKnownName> {
+pub fn create_mpris_bus_name(player_name: &str) -> zbus::Result<OwnedWellKnownName> {
     OwnedWellKnownName::try_from(format!("{MPRIS_BUS_NAME_PREFIX}{player_name}"))
 }

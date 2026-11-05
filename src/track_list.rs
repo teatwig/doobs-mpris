@@ -21,7 +21,7 @@ impl TrackList {
     // (although not as bad since TrackList can be created from the MediaPlayer)
     pub async fn new(connection: &Connection, name: OwnedBusName) -> Result<Self> {
         TrackListProxy::builder(connection)
-            .destination(name)?
+            .destination(name)
             .build()
             .await
             .map(Self::from)
@@ -77,7 +77,7 @@ impl TrackList {
     pub async fn detailed_tracks(&self) -> Result<BTreeMap<TrackId, Metadata>> {
         let tracks = self.tracks().await?;
         let metadata = self.get_tracks_metadata(&tracks).await?;
-        Ok(tracks.into_iter().zip(metadata.into_iter()).collect())
+        Ok(tracks.into_iter().zip(metadata).collect())
     }
 }
 

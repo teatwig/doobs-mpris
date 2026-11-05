@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 use serde::{Deserialize, Serialize};
-use zvariant::{Type, Value};
+use zbus::{Type, Variant};
 
 use crate::types::PlaylistId;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Value, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Variant, Serialize, Deserialize)]
 pub struct Playlist((PlaylistId, String, String));
 
 impl Playlist {

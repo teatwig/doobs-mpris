@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use serde::de::{self, Deserialize, Visitor};
 use serde::ser::{Serialize, Serializer};
-use zvariant::{Signature, Type, Value};
+use zbus::{Signature, Type, Variant};
 
 use crate::{Error, Result};
 
@@ -26,19 +26,19 @@ impl Type for PlaylistOrdering {
     const SIGNATURE: &'static Signature = String::SIGNATURE;
 }
 
-impl TryFrom<Value<'_>> for PlaylistOrdering {
-    type Error = zvariant::Error;
+impl TryFrom<Variant<'_>> for PlaylistOrdering {
+    type Error = zbus::Error;
 
-    fn try_from(value: Value) -> zvariant::Result<Self> {
+    fn try_from(value: Variant) -> zbus::Result<Self> {
         let value: &str = value.downcast_ref::<&str>()?;
         let value = PlaylistOrdering::from_str(value)?;
         Ok(value)
     }
 }
 
-impl From<PlaylistOrdering> for Value<'_> {
+impl From<PlaylistOrdering> for Variant<'_> {
     fn from(ordering: PlaylistOrdering) -> Self {
-        Value::Str(ordering.to_string().into())
+        Variant::Str(ordering.to_string().into())
     }
 }
 
@@ -113,8 +113,9 @@ impl Visitor<'_> for PlaylistOrderingVisitor {
 
 #[cfg(test)]
 mod test {
-    use zvariant::serialized::Context;
-    use zvariant::{LE, Value, to_bytes};
+    use zbus::Variant;
+    use zbus::wire::serialized::Context;
+    use zbus::wire::{LE, to_bytes};
 
     use super::PlaylistOrdering;
 
@@ -123,32 +124,32 @@ mod test {
         let expected = PlaylistOrdering::UserDefined;
 
         // lowercase string works
-        let v = Value::Str("user".into());
+        let v = Variant::Str("user".into());
         let status = PlaylistOrdering::try_from(v.clone()).unwrap();
 
         assert_eq!(status, expected);
-        assert_eq!(Value::Str("User".into()), Value::from(expected));
+        assert_eq!(Variant::Str("User".into()), Variant::from(expected));
     }
 
     #[test]
     fn wrong_enum_type() {
-        let v = Value::Str("unknown".into());
+        let v = Variant::Str("unknown".into());
         let err = PlaylistOrdering::try_from(v.clone()).unwrap_err();
 
-        assert!(matches!(err, zvariant::Error::Message(_)));
+        assert!(matches!(err, zbus::Error::Failure(_)));
     }
 
     #[test]
     fn wrong_dbus_type() {
-        let v = Value::U64(5);
+        let v = Variant::U64(5);
         let err = PlaylistOrdering::try_from(v.clone()).unwrap_err();
 
-        assert_eq!(zvariant::Error::IncorrectType, err);
+        assert_eq!(zbus::Error::IncorrectType, err);
     }
 
     #[test]
     fn serialize() {
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes(ctxt, &PlaylistOrdering::ModifiedDate).unwrap();
         let decoded: &str = encoded.deserialize().unwrap().0;
 
@@ -157,7 +158,7 @@ mod test {
 
     #[test]
     fn deserialize() {
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes(ctxt, "Modified").unwrap();
         let decoded: PlaylistOrdering = encoded.deserialize().unwrap().0;
 

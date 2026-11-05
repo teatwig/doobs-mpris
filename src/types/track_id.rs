@@ -4,7 +4,7 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
-use zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Type, Value};
+use zbus::{ObjectPath, OwnedObjectPath, OwnedVariant, Type, Variant};
 
 /// This path indicates "no track" when returned as the current Track ID,
 /// or the start of a playlist when inserting into one.
@@ -18,7 +18,7 @@ pub const TRACK_ID_NO_TRACK: ObjectPath =
 /// Note that this should be a valid D-Bus object id, although clients should not assume that any object is actually exported with any interfaces at that path.
 ///
 /// Media players may not use any paths starting with /org/mpris unless explicitly allowed by this specification. Such paths are intended to have special meaning, such as /org/mpris/MediaPlayer2/TrackList/NoTrack to indicate "no track".
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Serialize, Deserialize, Value)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Type, Serialize, Deserialize, Variant)]
 pub struct TrackId(OwnedObjectPath);
 
 impl TrackId {
@@ -69,7 +69,7 @@ impl Display for TrackId {
     }
 }
 
-impl From<TrackId> for OwnedValue {
+impl From<TrackId> for OwnedVariant {
     fn from(value: TrackId) -> Self {
         value.into_static_path().into()
     }
@@ -87,17 +87,17 @@ impl From<OwnedObjectPath> for TrackId {
     }
 }
 
-impl TryFrom<OwnedValue> for TrackId {
-    type Error = zvariant::Error;
+impl TryFrom<OwnedVariant> for TrackId {
+    type Error = zbus::Error;
 
-    fn try_from(value: OwnedValue) -> Result<Self, Self::Error> {
+    fn try_from(value: OwnedVariant) -> Result<Self, Self::Error> {
         let oop: OwnedObjectPath = value.try_into()?;
         Ok(Self(oop))
     }
 }
 
 impl TryFrom<&str> for TrackId {
-    type Error = zvariant::Error;
+    type Error = zbus::Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let oop: OwnedObjectPath = value.try_into()?;
@@ -106,7 +106,7 @@ impl TryFrom<&str> for TrackId {
 }
 
 impl TryFrom<String> for TrackId {
-    type Error = zvariant::Error;
+    type Error = zbus::Error;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         value.as_str().try_into()

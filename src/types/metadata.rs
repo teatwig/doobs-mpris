@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 
 use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
-use zvariant::{OwnedValue, Type, Value};
+use zbus::{OwnedVariant, Type, Variant};
 
 use crate::types::TrackId;
 use crate::{Error, Result};
@@ -67,7 +67,7 @@ const FIELD_USER_RATING: &str = "xesam:userRating";
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Metadata {
-    inner: HashMap<String, OwnedValue>,
+    inner: HashMap<String, OwnedVariant>,
 }
 
 impl Metadata {
@@ -260,7 +260,7 @@ impl Metadata {
 }
 
 impl Deref for Metadata {
-    type Target = HashMap<String, OwnedValue>;
+    type Target = HashMap<String, OwnedVariant>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -288,8 +288,8 @@ impl Display for Metadata {
     }
 }
 
-impl From<HashMap<String, OwnedValue>> for Metadata {
-    fn from(value: HashMap<String, OwnedValue>) -> Self {
+impl From<HashMap<String, OwnedVariant>> for Metadata {
+    fn from(value: HashMap<String, OwnedVariant>) -> Self {
         Self { inner: value }
     }
 }
@@ -297,19 +297,19 @@ impl From<HashMap<String, OwnedValue>> for Metadata {
 // traits necessary to use it as a type in zbus
 
 impl Type for Metadata {
-    const SIGNATURE: &'static zvariant::Signature = &zvariant::signature!("a{sv}");
+    const SIGNATURE: &'static zbus::Signature = &zbus::signature!("a{sv}");
 }
 
-impl From<Metadata> for Value<'_> {
+impl From<Metadata> for Variant<'_> {
     fn from(value: Metadata) -> Self {
         value.inner.into()
     }
 }
 
-impl TryFrom<OwnedValue> for Metadata {
-    type Error = zvariant::Error;
+impl TryFrom<OwnedVariant> for Metadata {
+    type Error = zbus::Error;
 
-    fn try_from(value: OwnedValue) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: OwnedVariant) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
             inner: value.clone().try_into()?,
         })
@@ -317,7 +317,7 @@ impl TryFrom<OwnedValue> for Metadata {
 }
 
 /// Tries to convert the given value into an Integer.
-pub fn try_value_into_integer(value: OwnedValue) -> Result<u32> {
+pub fn try_value_into_integer(value: OwnedVariant) -> Result<u32> {
     // There is no clear consensus what an "Integer" in the Xesam properties is.
     // But most projects seemt to use i32 (`i`).
     // This also aligns with the `track_length` being differentiated as a "64-bit integer".
@@ -328,26 +328,26 @@ pub fn try_value_into_integer(value: OwnedValue) -> Result<u32> {
     // * `bpm`/`track_number`/`disc_number` are comparitively small.
     // * `use_count` could outgrow a u16 if someone listens to a track *a lot*, but not a u32.
     match *value {
-        Value::U8(v) => Ok(v as u32),
-        Value::Bool(v) => Ok(v as u32),
-        Value::I16(v) => Ok(v as u32),
-        Value::U16(v) => Ok(v as u32),
-        Value::I32(v) => Ok(v as u32),
-        Value::U32(v) => Ok(v),
-        Value::I64(v) => Ok(v as u32),
-        Value::U64(v) => Ok(v as u32),
-        _ => Err(Error::IncorrectValue {
+        Variant::U8(v) => Ok(v as u32),
+        Variant::Bool(v) => Ok(v as u32),
+        Variant::I16(v) => Ok(v as u32),
+        Variant::U16(v) => Ok(v as u32),
+        Variant::I32(v) => Ok(v as u32),
+        Variant::U32(v) => Ok(v),
+        Variant::I64(v) => Ok(v as u32),
+        Variant::U64(v) => Ok(v as u32),
+        _ => Err(Error::IncorrectVariant {
             wanted: "Integer",
             actual: value,
         }),
     }
 }
 
-pub fn try_value_into_date(value: OwnedValue) -> Result<Timestamp> {
+pub fn try_value_into_date(value: OwnedVariant) -> Result<Timestamp> {
     let value: String = value
         .clone()
         .try_into()
-        .map_err(|_| Error::IncorrectValue {
+        .map_err(|_| Error::IncorrectVariant {
             wanted: "Str",
             actual: value,
         })?;
@@ -357,20 +357,20 @@ pub fn try_value_into_date(value: OwnedValue) -> Result<Timestamp> {
     Ok(value)
 }
 
-fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &Value) -> fmt::Result {
+fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &Variant) -> fmt::Result {
     match value {
-        Value::U8(b) => write!(f, "{b}"),
-        Value::Bool(b) => write!(f, "{b}"),
-        Value::I16(i) => write!(f, "{i}"),
-        Value::U16(u) => write!(f, "{u}"),
-        Value::I32(i) => write!(f, "{i}"),
-        Value::U32(u) => write!(f, "{u}"),
-        Value::I64(i) => write!(f, "{i}"),
-        Value::U64(u) => write!(f, "{u}"),
-        Value::F64(d) => write!(f, "{d}"),
-        Value::Str(s) => write!(f, "\"{s}\""),
-        Value::ObjectPath(p) => write!(f, "\"{p}\""),
-        Value::Array(a) => {
+        Variant::U8(b) => write!(f, "{b}"),
+        Variant::Bool(b) => write!(f, "{b}"),
+        Variant::I16(i) => write!(f, "{i}"),
+        Variant::U16(u) => write!(f, "{u}"),
+        Variant::I32(i) => write!(f, "{i}"),
+        Variant::U32(u) => write!(f, "{u}"),
+        Variant::I64(i) => write!(f, "{i}"),
+        Variant::U64(u) => write!(f, "{u}"),
+        Variant::F64(d) => write!(f, "{d}"),
+        Variant::Str(s) => write!(f, "\"{s}\""),
+        Variant::ObjectPath(p) => write!(f, "\"{p}\""),
+        Variant::Array(a) => {
             write!(f, "[")?;
             let mut iter = a.iter().peekable();
             while let Some(value) = iter.next() {
@@ -382,7 +382,7 @@ fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &Value) -> fmt::Result {
             }
             write!(f, "]")
         }
-        Value::Dict(d) => {
+        Variant::Dict(d) => {
             write!(f, "{{")?;
             let mut iter = d.iter().peekable();
             while let Some((k, v)) = iter.next() {
@@ -394,7 +394,7 @@ fn write_zvalue(f: &mut fmt::Formatter<'_>, value: &Value) -> fmt::Result {
             }
             write!(f, "}}")
         }
-        Value::Value(value) => write_zvalue(f, value),
+        Variant::Variant(value) => write_zvalue(f, value),
         _ => write!(f, "{value:?}"),
     }
 }
@@ -405,11 +405,9 @@ mod test {
     use std::str::FromStr;
 
     use jiff::SignedDuration;
-    use zvariant::serialized::Context;
-    use zvariant::{
-        Array, Dict, LE, ObjectPath, OwnedValue, Signature, Value, signature, to_bytes,
-        to_bytes_for_signature,
-    };
+    use zbus::wire::serialized::Context;
+    use zbus::wire::{LE, to_bytes, to_bytes_for_signature};
+    use zbus::{Array, Dict, ObjectPath, OwnedVariant, Signature, Variant, signature};
 
     use super::*;
 
@@ -424,24 +422,24 @@ mod test {
         let mut v = Dict::new(&Signature::Str, &Signature::Variant);
         v.add(
             FIELD_TRACK_ID,
-            Value::ObjectPath("/hii".try_into().unwrap()),
+            Variant::ObjectPath("/hii".try_into().unwrap()),
         )
         .unwrap();
-        let v = Value::Dict(v);
-        let ov = OwnedValue::try_from(v.clone()).unwrap();
+        let v = Variant::Dict(v);
+        let ov = OwnedVariant::try_from(v.clone()).unwrap();
         let metadata = Metadata::try_from(ov).unwrap();
 
         assert_eq!(metadata, expected);
-        assert_eq!(v, Value::from(expected));
+        assert_eq!(v, Variant::from(expected));
     }
 
     #[test]
     fn wrong_dbus_type() {
-        let v = Value::U64(5);
-        let ov = OwnedValue::try_from(v).unwrap();
+        let v = Variant::U64(5);
+        let ov = OwnedVariant::try_from(v).unwrap();
         let err = Metadata::try_from(ov).unwrap_err();
 
-        assert_eq!(zvariant::Error::IncorrectType, err);
+        assert_eq!(zbus::Error::IncorrectType, err);
     }
 
     #[test]
@@ -465,27 +463,27 @@ mod test {
 
     #[test]
     fn get_length() {
-        let metadata = new_metadata(FIELD_LENGTH, Value::I64(42 * 1000 * 1000));
+        let metadata = new_metadata(FIELD_LENGTH, Variant::I64(42 * 1000 * 1000));
         assert_eq!(metadata.length(), Some(SignedDuration::from_secs(42)));
     }
 
     #[test]
     fn get_art_url() {
-        let metadata = new_metadata(FIELD_ART_URL, Value::Str("https://my/cool/art".into()));
+        let metadata = new_metadata(FIELD_ART_URL, Variant::Str("https://my/cool/art".into()));
         assert_eq!(metadata.art_url(), Some("https://my/cool/art".to_string()));
     }
 
     #[test]
     fn get_album() {
-        let metadata = new_metadata(FIELD_ALBUM, Value::Str("The Album".into()));
+        let metadata = new_metadata(FIELD_ALBUM, Variant::Str("The Album".into()));
         assert_eq!(metadata.album(), Some("The Album".to_string()));
     }
 
     #[test]
     fn get_album_artist() {
         let mut arr = Array::new(&Signature::Str);
-        arr.append(Value::Str("Foo Artist".into())).unwrap();
-        arr.append(Value::Str("Bar Artist".into())).unwrap();
+        arr.append(Variant::Str("Foo Artist".into())).unwrap();
+        arr.append(Variant::Str("Bar Artist".into())).unwrap();
         let metadata = new_metadata(FIELD_ALBUM_ARTIST, arr);
         assert_eq!(
             metadata.album_artists(),
@@ -496,8 +494,8 @@ mod test {
     #[test]
     fn get_artist() {
         let mut arr = Array::new(&Signature::Str);
-        arr.append(Value::Str("Foo Artist".into())).unwrap();
-        arr.append(Value::Str("Bar Artist".into())).unwrap();
+        arr.append(Variant::Str("Foo Artist".into())).unwrap();
+        arr.append(Variant::Str("Bar Artist".into())).unwrap();
         let metadata = new_metadata(FIELD_ARTIST, arr);
         assert_eq!(
             metadata.artists(),
@@ -509,7 +507,7 @@ mod test {
     fn get_lyrics() {
         let metadata = new_metadata(
             FIELD_AS_TEXT,
-            Value::Str("If I can live through this, I can do anything".into()),
+            Variant::Str("If I can live through this, I can do anything".into()),
         );
         assert_eq!(
             metadata.lyrics(),
@@ -519,21 +517,21 @@ mod test {
 
     #[test]
     fn get_bpm() {
-        let metadata = new_metadata(FIELD_AUDIO_BPM, Value::I32(120));
+        let metadata = new_metadata(FIELD_AUDIO_BPM, Variant::I32(120));
         assert_eq!(metadata.bpm(), Some(120));
     }
 
     #[test]
     fn get_auto_rating() {
-        let metadata = new_metadata(FIELD_AUTO_RATING, Value::F64(0.7));
+        let metadata = new_metadata(FIELD_AUTO_RATING, Variant::F64(0.7));
         assert_eq!(metadata.auto_rating(), Some(0.7));
     }
 
     #[test]
     fn get_comments() {
         let mut arr = Array::new(&Signature::Str);
-        arr.append(Value::Str("Some comment".into())).unwrap();
-        arr.append(Value::Str("Another comment".into())).unwrap();
+        arr.append(Variant::Str("Some comment".into())).unwrap();
+        arr.append(Variant::Str("Another comment".into())).unwrap();
         let metadata = new_metadata(FIELD_COMMENT, arr);
         assert_eq!(
             metadata.comments(),
@@ -547,8 +545,8 @@ mod test {
     #[test]
     fn get_composers() {
         let mut arr = Array::new(&Signature::Str);
-        arr.append(Value::Str("Chopin".into())).unwrap();
-        arr.append(Value::Str("Franchomme".into())).unwrap();
+        arr.append(Variant::Str("Chopin".into())).unwrap();
+        arr.append(Variant::Str("Franchomme".into())).unwrap();
         let metadata = new_metadata(FIELD_COMPOSER, arr);
         assert_eq!(
             metadata.composers(),
@@ -560,7 +558,7 @@ mod test {
     fn get_created() {
         let metadata = new_metadata(
             FIELD_CONTENT_CREATED,
-            Value::Str("2007-04-29T13:56+01:00".into()),
+            Variant::Str("2007-04-29T13:56+01:00".into()),
         );
         assert_eq!(
             metadata.created(),
@@ -570,7 +568,7 @@ mod test {
 
     #[test]
     fn get_disc_number() {
-        let metadata = new_metadata(FIELD_DISC_NUMBER, Value::I32(2));
+        let metadata = new_metadata(FIELD_DISC_NUMBER, Variant::I32(2));
         assert_eq!(metadata.disc_number(), Some(2));
     }
 
@@ -578,7 +576,7 @@ mod test {
     fn get_first_played() {
         let metadata = new_metadata(
             FIELD_FIRST_USED,
-            Value::Str("2007-04-29T13:56+01:00".into()),
+            Variant::Str("2007-04-29T13:56+01:00".into()),
         );
         assert_eq!(
             metadata.first_played(),
@@ -589,8 +587,8 @@ mod test {
     #[test]
     fn get_genres() {
         let mut arr = Array::new(&Signature::Str);
-        arr.append(Value::Str("Pop".into())).unwrap();
-        arr.append(Value::Str("Rock".into())).unwrap();
+        arr.append(Variant::Str("Pop".into())).unwrap();
+        arr.append(Variant::Str("Rock".into())).unwrap();
         let metadata = new_metadata(FIELD_GENRE, arr);
         assert_eq!(
             metadata.genres(),
@@ -600,7 +598,10 @@ mod test {
 
     #[test]
     fn get_last_played() {
-        let metadata = new_metadata(FIELD_LAST_USED, Value::Str("2007-04-29T13:56+01:00".into()));
+        let metadata = new_metadata(
+            FIELD_LAST_USED,
+            Variant::Str("2007-04-29T13:56+01:00".into()),
+        );
         assert_eq!(
             metadata.last_played(),
             Some(Timestamp::from_str("2007-04-29T13:56+01:00").unwrap())
@@ -610,8 +611,8 @@ mod test {
     #[test]
     fn get_lyricists() {
         let mut arr = Array::new(&Signature::Str);
-        arr.append(Value::Str("Frog in a Car".into())).unwrap();
-        arr.append(Value::Str("Potato Chip".into())).unwrap();
+        arr.append(Variant::Str("Frog in a Car".into())).unwrap();
+        arr.append(Variant::Str("Potato Chip".into())).unwrap();
         let metadata = new_metadata(FIELD_LYRICIST, arr);
         assert_eq!(
             metadata.lyricists(),
@@ -621,19 +622,19 @@ mod test {
 
     #[test]
     fn get_title() {
-        let metadata = new_metadata(FIELD_TITLE, Value::Str("The Grid".into()));
+        let metadata = new_metadata(FIELD_TITLE, Variant::Str("The Grid".into()));
         assert_eq!(metadata.title(), Some("The Grid".to_string()));
     }
 
     #[test]
     fn get_track_number() {
-        let metadata = new_metadata(FIELD_TRACK_NUMBER, Value::I32(7));
+        let metadata = new_metadata(FIELD_TRACK_NUMBER, Variant::I32(7));
         assert_eq!(metadata.track_number(), Some(7));
     }
 
     #[test]
     fn get_url() {
-        let metadata = new_metadata(FIELD_URL, Value::Str("https://the/best/song/ever".into()));
+        let metadata = new_metadata(FIELD_URL, Variant::Str("https://the/best/song/ever".into()));
         assert_eq!(
             metadata.url(),
             Some("https://the/best/song/ever".to_string())
@@ -642,47 +643,47 @@ mod test {
 
     #[test]
     fn get_play_count() {
-        let metadata = new_metadata(FIELD_USE_COUNT, Value::I32(123));
+        let metadata = new_metadata(FIELD_USE_COUNT, Variant::I32(123));
         assert_eq!(metadata.play_count(), Some(123));
     }
 
     #[test]
     fn get_user_rating() {
-        let metadata = new_metadata(FIELD_USER_RATING, Value::F64(0.9));
+        let metadata = new_metadata(FIELD_USER_RATING, Variant::F64(0.9));
         assert_eq!(metadata.user_rating(), Some(0.9));
     }
 
     #[test]
     fn serialize() {
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes(ctxt, &new_metadata(FIELD_TRACK_NUMBER, 7)).unwrap();
-        let decoded: HashMap<String, OwnedValue> = encoded.deserialize().unwrap().0;
+        let decoded: HashMap<String, OwnedVariant> = encoded.deserialize().unwrap().0;
 
         assert_eq!(
             decoded.get(FIELD_TRACK_NUMBER).unwrap().deref(),
-            &Value::from(7)
+            &Variant::from(7)
         );
     }
 
     #[test]
     fn deserialize() {
-        let mut hashmap: HashMap<String, OwnedValue> = HashMap::new();
-        hashmap.insert(FIELD_TRACK_NUMBER.to_string(), OwnedValue::from(7i32));
+        let mut hashmap: HashMap<String, OwnedVariant> = HashMap::new();
+        hashmap.insert(FIELD_TRACK_NUMBER.to_string(), OwnedVariant::from(7i32));
 
-        let ctxt = Context::new_dbus(LE, 0);
+        let ctxt = Context::new(LE, 0);
         let encoded = to_bytes_for_signature(ctxt, signature!("a{sv}"), &hashmap).unwrap();
         let decoded: Metadata = encoded.deserialize().unwrap().0;
 
         assert_eq!(
             decoded.get(FIELD_TRACK_NUMBER).unwrap().deref(),
-            &Value::from(7)
+            &Variant::from(7)
         );
     }
 
     fn new_metadata<'a, K, V>(key: K, value: V) -> Metadata
     where
         K: Into<String>,
-        V: Into<Value<'a>>,
+        V: Into<Variant<'a>>,
     {
         let mut metadata: Metadata = HashMap::new().into();
         metadata.insert(key.into(), value.into().try_into().unwrap());

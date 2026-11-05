@@ -18,14 +18,8 @@ async fn main() -> Result<()> {
 
     let player = doobs_mpris::binding::Player::new(FooPlayerProvider);
     let _player_iface = zbus::connection::Builder::session()
-        .into_diagnostic()
-        .wrap_err("Failed to create session D-Bus builder")?
         .name(&bus_name)
-        .into_diagnostic()
-        .wrap_err_with(|| format!("Failed to register D-Bus service: {bus_name}"))?
         .serve_at(MPRIS_OBJECT_PATH, player)
-        .into_diagnostic()
-        .wrap_err("Failed to serve Foo player on MPRIS path")?
         .build()
         .await
         .into_diagnostic()
@@ -61,7 +55,7 @@ struct FooPlayerProvider;
 impl PlayerProvider for FooPlayerProvider {
     async fn metadata(&self) -> zbus::fdo::Result<Metadata> {
         let track_id = TrackId::try_from("/noplaylist").unwrap();
-        let title: zvariant::OwnedValue = zvariant::Value::from("A Really Cool Song")
+        let title: zbus::OwnedVariant = zbus::Variant::from("A Really Cool Song")
             .try_into()
             .unwrap();
 
